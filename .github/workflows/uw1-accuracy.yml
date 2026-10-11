@@ -11,6 +11,8 @@ name: uw1-accuracy
 on:
   push:
     paths:
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'uw1/**'
       - 'exhume'
       - '.gitmodules'
@@ -22,6 +24,8 @@ on:
     branches: [main]
   pull_request:
     paths:
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'uw1/**'
       - 'exhume'
       - '.gitmodules'

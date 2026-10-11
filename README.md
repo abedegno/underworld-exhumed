@@ -1,5 +1,9 @@
 # Underworld Exhumed
 
+This fork is building real-time co-op for both games. The first experimental milestone adds
+two-player native network sessions, live partner health/position, and an automap partner
+marker. **It does not synchronise the game world yet.** See [the co-op setup and roadmap](docs/COOP.md).
+
 **Ultima Underworld:** [![UW1 accuracy](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-accuracy.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-accuracy.yml) [![UW1 port](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-port.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-port.yml) [![UW1 release](https://img.shields.io/github/v/release/abedegno/underworld-exhumed?filter=uw1-*&include_prereleases&label=release)](https://github.com/abedegno/underworld-exhumed/releases)  
 **Ultima Underworld II:** [![UW2 accuracy](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-accuracy.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-accuracy.yml) [![UW2 port](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-port.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-port.yml) [![UW2 release](https://img.shields.io/github/v/release/abedegno/underworld-exhumed?filter=!uw1-*&label=release)](https://github.com/abedegno/underworld-exhumed/releases)  
 [![repocheck](https://github.com/abedegno/underworld-exhumed/actions/workflows/repocheck.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/repocheck.yml) [![Licence: MIT](https://img.shields.io/github/license/abedegno/underworld-exhumed)](LICENSE)

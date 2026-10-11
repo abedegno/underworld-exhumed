@@ -116,6 +116,7 @@ static char **game_argv;
 static int game(void *arg)
 {
     (void)arg;
+    if (port_coop_start()) return 2;
     return uw1_main(game_argc, game_argv);
 }
 
@@ -199,6 +200,10 @@ static const char help_text[] =
     "  --enhance NAME[,NAME]  turn on changes the original game does not have, kept until\n"
     "                         changed; --enhance list lists them\n"
     "  --no-enhance NAME      turn one off\n"
+    "Experimental co-op presence (native only; docs/COOP.md):\n"
+    "  --coop-host PORT      host a two-player presence session on a TCP port\n"
+    "  --coop-join IPV4:PORT  join a host; live partner health and automap marker\n"
+    "                         worlds, combat, inventory and saves remain independent\n"
     "Sound:\n"
     "  --sound MUSIC[,SPEECH] the sound cards, kept until changed (first run: 3,1, or 6,1\n"
     "                         when MT-32 ROMs are given or found):\n"
@@ -350,6 +355,10 @@ int main(int argc, char *argv[])
         const char *a = argv[i];
         if (!strcmp(a, "--data") && i + 1 < argc) data = argv[++i];
         else if (!strcmp(a, "--home") && i + 1 < argc) home = argv[++i];
+        else if ((!strcmp(a, "--coop-host") || !strcmp(a, "--coop-join")) && i + 1 < argc) {
+            int role = !strcmp(a, "--coop-host") ? PORT_COOP_HOST : PORT_COOP_JOIN;
+            if (port_coop_configure(role, argv[++i])) return 2;
+        }
         else if (!strcmp(a, "--scale") && i + 1 < argc) {
             cfg.scale = atoi(argv[++i]);
             cfg.scale = cfg.scale < 1 ? 1 : cfg.scale > 8 ? 8 : cfg.scale;   /* the screen's 1x to 8x */
@@ -395,6 +404,10 @@ int main(int argc, char *argv[])
         /* a folder or file dropped on the program's icon (Windows, Linux) arrives as an argument */
         else if (!roms && a[0] != '-' && mt32roms_pick(a, NULL)) { roms = a; dropped = 1; }
         else game_argv[game_argc++] = argv[i];
+    }
+    if (port_coop_enabled() && (rp_request == 1 || rp_request == 2 || nshots)) {
+        fprintf(stderr, "uw1port: co-op presence cannot be combined with --record, --replay or --shot-at-flip\n");
+        return 2;
     }
     if (settings_list) {
         port_settings_list(stdout);
@@ -546,7 +559,7 @@ int main(int argc, char *argv[])
     port_settings_seed(cfg.fullscreen, cfg.scale, cfg.aspect, cfg.integer_scale, cfg.mouse_lock);
     pit_start();
     memset(&hooks, 0, sizeof hooks);
-    hooks.scanout = vga_scanout;
+    hooks.scanout = port_coop_enabled() ? port_coop_scanout : vga_scanout;
     hooks.key = kbd_byte;
     hooks.pointer = mouse_event;
     hooks.lifecycle = on_lifecycle;

@@ -84,4 +84,13 @@ enum { ENH_SKIP_INTRO, ENH_WRAP_MENU, ENH_FAST_PANELS, ENH_FREE_HEADING, ENH_SUB
 #define PORT_KEY_LSHIFT 0xBF
 int port_pitch_bound(void);                 /* game/PLAYER.C: the pitch's bound either way */
 
+/* Opt-in native co-op presence (shared implementation in coop/). */
+enum { PORT_COOP_HOST = 1, PORT_COOP_JOIN = 2 };
+int port_coop_configure(int role, const char *endpoint);
+int port_coop_enabled(void);
+int port_coop_start(void);
+void port_coop_tick(void);
+void port_coop_map_level(int level);
+void port_coop_scanout(unsigned char *pixels, int *w, int *h, unsigned char rgb6[768]);
+
 #endif

@@ -777,6 +777,9 @@ void far ShowAutoMapLevel(int lev)
             Transparency = 0;
         }
         level = lev;
+#ifndef __TURBOC__
+        port_coop_map_level(lev);
+#endif
         grPageFlip();
         grfx_quikpal(PAL_MAP);
         grSoftPageFlip();

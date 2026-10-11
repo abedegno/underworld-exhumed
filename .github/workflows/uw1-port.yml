@@ -6,6 +6,8 @@ name: uw1-port
 on:
   push:
     paths:
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'uw1/**'
       - 'exhume'
       - '.gitmodules'
@@ -17,6 +19,8 @@ on:
     branches: ['**']
   pull_request:
     paths:
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'uw1/**'
       - 'exhume'
       - '.gitmodules'

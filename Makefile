@@ -13,7 +13,11 @@ GAMES := $(if $(GAME),$(GAME),uw1 uw2)
 TARGETS := check test test-full port port-debug port-release package verify vectors \
            setup-port setup-libs setup-sound
 
-.PHONY: $(TARGETS) setup setup-exhume setup-toolchain repocheck help
+.PHONY: $(TARGETS) setup setup-exhume setup-toolchain repocheck help test-coop
+
+# Headless networking tests, no game assets or Borland tools required.
+test-coop:
+	@python3 tools/test-coop.py --adapter
 $(TARGETS):
 	@set -e; for g in $(GAMES); do echo "==== $$g: make $@"; $(MAKE) -C $$g $@; done
 
@@ -48,4 +52,4 @@ repocheck:
 	  if [ "$$n" -gt 0 ]; then echo "repocheck: $$n links into UW1Decomp or UW2Decomp's files (tools/relink.py)"; exit 1; fi
 
 help:
-	@echo "make [GAME=uw1|uw2] setup | $(TARGETS) | repocheck"
+	@echo "make [GAME=uw1|uw2] setup | $(TARGETS) | repocheck | test-coop"

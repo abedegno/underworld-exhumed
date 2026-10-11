@@ -133,6 +133,8 @@ on_paths = '''
 
     paths:
       - 'uw1/**'
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'exhume'
       - '.gitmodules'
       - '.gitattributes'
@@ -436,6 +438,8 @@ on_paths = '''
 
     paths:
       - 'uw2/**'
+      - 'coop/**'
+      - 'tests/coop/**'
       - 'exhume'
       - '.gitmodules'
       - '.gitattributes'

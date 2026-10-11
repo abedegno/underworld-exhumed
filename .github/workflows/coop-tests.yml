@@ -1,0 +1,26 @@
+name: coop-tests
+on:
+  push:
+    paths: ['coop/**', 'tests/coop/**', 'tools/test-coop.py', 'uw1/src/**', 'uw2/src/**', 'exhume', '.github/workflows/coop-tests.yml', 'Makefile']
+  pull_request:
+    paths: ['coop/**', 'tests/coop/**', 'tools/test-coop.py', 'uw1/src/**', 'uw2/src/**', 'exhume', '.github/workflows/coop-tests.yml', 'Makefile']
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          submodules: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: make test-coop
+      - if: runner.os == 'Linux'
+        run: python3 tools/test-coop.py --adapter --sanitize

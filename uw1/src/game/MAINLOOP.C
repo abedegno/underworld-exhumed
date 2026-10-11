@@ -29,6 +29,10 @@ void far mainloop(void)
 {
     while (notdone)
     {
+#ifndef __TURBOC__
+        /* Native co-op sessions are pumped on the game thread, including on the map. */
+        port_coop_tick();
+#endif
         if (changed)
             do_changes();
         input_dispatch(inplist);

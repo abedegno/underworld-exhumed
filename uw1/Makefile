@@ -114,16 +114,16 @@ port-check:
 	@$(PORT)/portcheck.py --config exhume.toml
 
 port:
-	@$(PORT)/portbuild.py --config exhume.toml
+	@$(PY) tools/portbuild.py --config exhume.toml
 
 port-debug:
-	@$(PORT)/portbuild.py --config exhume.toml --debug
+	@$(PY) tools/portbuild.py --config exhume.toml --debug
 
 port-release:
-	@$(PORT)/portbuild.py --config exhume.toml --release $(PORT_ARCHS)
+	@$(PY) tools/portbuild.py --config exhume.toml --release $(PORT_ARCHS)
 
 web:
-	@PATH="$(HOME)/emsdk:$(HOME)/emsdk/upstream/emscripten:$$PATH"; $(PORT)/portbuild.py --config exhume.toml --web
+	@PATH="$(HOME)/emsdk:$(HOME)/emsdk/upstream/emscripten:$$PATH"; $(PY) tools/portbuild.py --config exhume.toml --web
 
 webcheck: web
 	@EXHUME_EXIT_AFTER=3600000 EXHUME_PORT=$(CURDIR)/build/web-node/uw1port $(PORT)/replay.py --config exhume.toml verify all
