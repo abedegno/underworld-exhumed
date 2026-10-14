@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <assert.h>
 #include <time.h>
@@ -44,7 +45,8 @@ int main(void)
     port_coop_scanout(pixels, &w, &h, palette);
     for (i = 0; i < 320 * 200; i++) assert(pixels[i] == 77); /* solo is unchanged */
     fd = socket(AF_INET, SOCK_STREAM, 0); assert(fd >= 0);
-    memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET; addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET;
+    assert(inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) == 1);
     assert(!bind(fd, (struct sockaddr *)&addr, sizeof addr));
     assert(!getsockname(fd, (struct sockaddr *)&addr, &size)); close(fd);
     snprintf(port, sizeof port, "%u", ntohs(addr.sin_port));
