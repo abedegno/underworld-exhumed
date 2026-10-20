@@ -236,6 +236,10 @@ int far change_terrain(int x, int y, int wall, int floor, register int height,
                         SET_Z(obj, height << 3);
                         if (IsMobElem(obj) && OBJ_MAJOR(obj) != MAJOR_CREATURE)
                             obj->b0F = height << 6;
+#ifndef __TURBOC__
+                        else if (port_shared_avatar(obj))
+                            port_shared_terrain(obj, height, 1);
+#endif
                         else if (obj == ThePlayer)
                             PN.z = height << 6;
                     }
@@ -248,6 +252,10 @@ int far change_terrain(int x, int y, int wall, int floor, register int height,
                         SET_Z(obj, height << 3);
                         if (IsMobElem(obj) && OBJ_MAJOR(obj) != MAJOR_CREATURE)
                             obj->b0F = height << 6;
+#ifndef __TURBOC__
+                        else if (port_shared_avatar(obj))
+                            port_shared_terrain(obj, height, 0);
+#endif
                         else if (obj == ThePlayer)
                             parse_player_terr(0x10, 1);
                     }

@@ -416,6 +416,9 @@ int far do_keyarray_input(void)
    the special keys (the keypad keys are 0x8C to 0x94, Tab is 9); Shift adds KEY_SHIFT to
    special keys only, Caps Lock flips the case of letters, and Alt and Ctrl add KEY_ALT
    and KEY_CTRL. So Ctrl+S is 0x173 (ICONS.C's do_option_shortcut). */
+#ifndef __TURBOC__
+static char port_lshift_was;
+#endif
 int far do_keyboard_input(char array)
 {
     int c;
@@ -425,10 +428,9 @@ int far do_keyboard_input(char array)
         /* port only: --enhance modern-keys binds a lone left Shift (UltimaHacks' jump). It has no
            character, so KEY never gives it; a new press is seen in key_on (0x2A, its scan code),
            which replays restore, and given as PORT_KEY_LSHIFT with the modifiers held */
-        static char lshift_was;
         char now = key_on[0x2A] != 0;
-        char pressed = now && !lshift_was;
-        lshift_was = now;
+        char pressed = now && !port_lshift_was;
+        port_lshift_was = now;
         if (pressed && ENHANCED(ENH_MODERN_KEYS)) {
             key_time = GAME_TIME();
             c = PORT_KEY_LSHIFT | KEY_SHIFT;
@@ -465,6 +467,12 @@ int far do_keyboard_input(char array)
 int far get_input(char array)
 {
     int c;
+
+#ifndef __TURBOC__
+    if ((c = port_shared_click(&q_x, &q_y)) > 0) {
+        q_taken = 1; didMouseInput = 1; return c;
+    }
+#endif
 
     didMouseInput = 1;
     if (mouse_first) {
@@ -1008,3 +1016,34 @@ int far mouse_btns(void)
     }
     return b;
 }
+
+#ifndef __TURBOC__
+/* Each seat has its own input repeat deadline and pending mouse press. */
+void port_shared_input_seat(int seat)
+{
+    static struct {
+        int16 x,y,button,qx,qy,release,last,index;
+        unsigned char taken;char first,shift;uint32 time;
+        char depth,look,look_was;int16 cursor,stack[3],lookx,looky;
+        int16 x0,y0,x1,y1,rx0,rx1,ry0,ry1;
+    } saved[2];
+    static int current,ready;
+    if (!ready || seat<0) {
+        memset(&saved[1],0,sizeof saved[1]);saved[1].button=-1;saved[1].first=1;
+        saved[1].x=saved[1].y=100;saved[1].x1=319;saved[1].y1=199;saved[1].rx0=-1;
+        ready=1;if(seat<0)return;
+    }
+    if (seat==current)return;
+#define S(member,global) saved[current].member=(global);(global)=saved[seat].member
+    S(x,mouse_x);S(y,mouse_y);S(button,q_button);S(qx,q_x);S(qy,q_y);
+    S(release,q_release);S(last,last_button);S(index,key_index);S(taken,q_taken);
+    S(first,mouse_first);S(shift,port_lshift_was);S(time,key_time);
+    S(depth,force_depth);S(look,look_on);S(look_was,look_was);S(lookx,look_x);S(looky,look_y);
+    S(x0,con_x0);S(y0,con_y0);S(x1,max_x);S(y1,max_y);
+    S(rx0,in_x0);S(rx1,in_x1);S(ry0,hit_y0);S(ry1,in_y1);
+#undef S
+    memcpy(saved[current].stack,curs_stack,sizeof curs_stack);memcpy(curs_stack,saved[seat].stack,sizeof curs_stack);
+    saved[current].cursor=m_cursor_pic;set_mouse_data(saved[seat].cursor ? saved[seat].cursor : ICON_CURSORS);
+    current=seat;
+}
+#endif

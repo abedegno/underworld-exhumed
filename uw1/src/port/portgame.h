@@ -14,6 +14,7 @@
    does (PORT_HEAP_FIRST, below). */
 #ifndef UW1_PORTGAME_H
 #define UW1_PORTGAME_H
+#include "../../../../coop/shared_port.h"
 
 #define PORT_NAME "uw1port"
 #define PORT_GAME_MAIN uw1_main                 /* UWEDIT.C's main (compat.h) */

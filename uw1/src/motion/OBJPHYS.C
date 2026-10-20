@@ -430,8 +430,14 @@ struct Object far * far mob_to_static(struct Object far *obj)
     if (OBJ_TERRAIN(obj) == 1) {
         fate = 8;
         put_effect(obj, 6, 3, 0, 0, XP, YP);
+#ifndef __TURBOC__
+    } else if (OBJ_TERRAIN(obj) == 2 && fate == 10 && PlayerLevel == 8
+               && abs(XP - 32) + abs(YP - 32) < 6
+               && (port_shared_on() ? port_shared_party_alive() : ThePlayer->hp != 0)) {
+#else
     } else if (OBJ_TERRAIN(obj) == 2 && fate == 10 && PlayerLevel == 8
                && abs(XP - 32) + abs(YP - 32) < 6 && ThePlayer->hp != 0) {
+#endif
         if (player->talisman_ok) {
             register int i;
 

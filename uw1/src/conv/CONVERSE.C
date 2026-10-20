@@ -106,6 +106,18 @@ char far *conv_buffer = 0;
 static char cnv_file[] = "DATA\\cnv.ark";
 uint16 cnv_id = 0;
 
+#ifndef __TURBOC__
+/* Read-only view of the displayed choices for the opt-in campaign driver. */
+int port_bot_menu_count(void)
+{
+    return scrnum == 2 && convoContinue && convo_mode && menus_active ? bablOptCount - 1 : 0;
+}
+const char *port_bot_menu_option(int option)
+{
+    return option > 0 && option < bablOptCount ? babl_display[option] : "";
+}
+#endif
+
 /* Start a conversation with thing, if it will talk. Item 0x157 is handed to mantra_advance
    (talking to a shrine); item 0x16E gets "There is no reaction from the princess." when
    its texture's entry in w64_types is 8, and nothing otherwise. Anything not a
@@ -135,7 +147,12 @@ void far TalkTo(struct Object far *thing)
     subclass = OBJ_INMAJOR(talking_to);
     if (who != 0x16 && who != 0x8E && who != 0xE7 &&
         (((OBJ_GOAL(talking_to) == GOAL_ATTACK || OBJ_GOAL(talking_to) == GOAL_FLEE ||
-           OBJ_GOAL(talking_to) == GOAL_CORNERED) && OBJ_GTARG(talking_to) == 1 ||
+           OBJ_GOAL(talking_to) == GOAL_CORNERED) &&
+#ifndef __TURBOC__
+          port_shared_player_index(OBJ_GTARG(talking_to)) ||
+#else
+          OBJ_GTARG(talking_to) == 1 ||
+#endif
           OBJ_ATTITUDE(talking_to) == ATT_HOSTILE) && !OBJ_ALLY(talking_to) || who == 0xff) &&
         OBJ_GOAL(talking_to) != GOAL_TALK) {
         scroll_print(get_string(STR_CONV | 1));  /* "You get no response.\n" */
@@ -389,6 +406,9 @@ int far conv_choice_ovr103_A13(int16 far *stack)
     while (string_no != 0) {
         babl_opts[bablOptCount] = get_string(string_no);
         babl_display[bablOptCount] = convert_string(babl_opts[bablOptCount]);
+#ifndef __TURBOC__
+        if (getenv("UW_COOP_TEST_CAMPAIGN")) fprintf(stderr, "SHARED MENU %u option %d: %s\n", cnv_id, bablOptCount, babl_display[bablOptCount]);
+#endif
         if (babl_display[bablOptCount] == babl_opts[bablOptCount]) {
             babl_display[bablOptCount] = bab_malloc((int32)(str_len(babl_opts[bablOptCount]) + 1));
             str_copy(babl_display[bablOptCount], babl_opts[bablOptCount]);
@@ -439,6 +459,9 @@ int far conv_fmenu_ovr103_BF2(int16 far *stack)
         if (value != 0) {
             babl_opts[bablOptCount] = get_string(string_no);
             babl_display[bablOptCount] = convert_string(babl_opts[bablOptCount]);
+#ifndef __TURBOC__
+            if (getenv("UW_COOP_BOT_HOME")) fprintf(stderr, "SHARED MENU %u option %d: %s\n", cnv_id, bablOptCount, babl_display[bablOptCount]);
+#endif
             if (babl_display[bablOptCount] == babl_opts[bablOptCount]) {
                 babl_display[bablOptCount] = bab_malloc((int32)(str_len(babl_opts[bablOptCount]) + 1));
                 str_copy(babl_display[bablOptCount], babl_opts[bablOptCount]);
@@ -509,6 +532,9 @@ void far conv_play_menu(int option)
 /* The "say" built-in (and SAY_OP): the NPC's line, in the NPC's scroll, \P first. */
 void far npc_say(char far *s)
 {
+#ifndef __TURBOC__
+    if (getenv("UW_COOP_BOT_HOME")) fprintf(stderr,"SHARED SAY %u: %s\n",cnv_id,s);
+#endif
     str_copy(conv_buffer, "\\P");
     str_cat(conv_buffer, s);
     str_cat(conv_buffer, "\n");
@@ -522,6 +548,9 @@ void far npc_say(char far *s)
 /* The "respond" built-in (and RESPOND_OP): a line in the player's scroll. */
 void far play_respond(char far *s)
 {
+#ifndef __TURBOC__
+    if (getenv("UW_COOP_BOT_HOME")) fprintf(stderr,"SHARED RESPOND %u: %s\n",cnv_id,s);
+#endif
     str_copy(conv_buffer, s);
     str_cat(conv_buffer, "\n");
     do_play_scroll();

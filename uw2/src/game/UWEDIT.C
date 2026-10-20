@@ -136,6 +136,15 @@ int main(int argc, char *argv[])
     CHECKPOINT(1);
     titlescr();
     CHECKPOINT(2);
+#ifndef __TURBOC__
+    if (port_shared_test_start()) {
+        init_char(0);
+        strcpy(player->name, "Coop Test");
+        if (!GetLevel(1)) pfatal_code(ERR_READ | 0xC);
+        player_setup(0x20,2,1);PlayerFacing=0;PlayerHeading=0;
+        change_screen(1);editchng(0x7FFE);
+    } else
+#endif
     real_start(1);
     CHECKPOINT(3);
     in_game = 1;
@@ -210,6 +219,9 @@ void far init_world(int argc, char *argv[])
    LEV.ARK and SCD.ARK copies do not outlive the program. */
 void far free_world(char flag)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     grfx_close();
     chdir(CurDir);
     free_input();
@@ -367,6 +379,9 @@ void far reset_times(void)
    cursor mode ended. */
 void far reset_game(void)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     punt_all_digi_fx();
     load_digi_fx(1);
     load_digi_fx(2);

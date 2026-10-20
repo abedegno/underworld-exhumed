@@ -19,6 +19,7 @@
    in FD71:0360 and MouseOn (FD71:0362); _6E7 reads the motion and scales it by 100 / 200;
    _703 gives the buttons. */
 #include <stdatomic.h>
+#include <string.h>
 #include "port.h"
 #include "plat.h"
 
@@ -40,7 +41,7 @@ static _Atomic int look_on, look_pct = 100;
 void mouse_look_mode(int on)
 {
     atomic_store(&look_on, on);
-    plat_pointer_capture(on);
+    if (!port_shared_guest()) plat_pointer_capture(on);
 }
 
 void mouse_look_speed(int pct)
@@ -78,6 +79,7 @@ void mouse_event(const PlatPointer *ev)
 /* int 33h: AX the function; returns its results in the registers, as the driver did. */
 int mouse_int33(uint16_t *ax, uint16_t *bx, uint16_t *cx, uint16_t *dx)
 {
+    port_shared_poll_input();
     int x, y;
     switch (*ax) {
     case 0x00:                          /* reset: installed, two buttons */
@@ -120,6 +122,22 @@ void seg021_22FD_6C8(void)
 }
 
 /* _6F8: AX * 100 / [0360], as imul and idiv do it (a 16-bit quotient). */
+int port_shared_mouse_look(void) { return atomic_load(&look_on); }
+
+void port_shared_mouse_seat(int seat)
+{
+    static struct { int mx,my,px,py,buttons,ax,ay,moved,look;float fx,fy; } saved[2];
+    static int current;
+    if (seat<0) { memset(&saved[1],0,sizeof saved[1]);return; }
+    if (seat==current) return;
+#define M(member,global) saved[current].member=atomic_load(&global);atomic_store(&global,saved[seat].member)
+    M(mx,mick_x);M(my,mick_y);M(px,pos_x);M(py,pos_y);M(buttons,buttons);
+    M(ax,abs_x);M(ay,abs_y);M(moved,moved);M(look,look_on);
+#undef M
+    saved[current].fx=frac_x;saved[current].fy=frac_y;frac_x=saved[seat].fx;frac_y=saved[seat].fy;
+    current=seat;
+}
+
 static int16_t scale(int16_t v)
 {
     int32_t p = (int32_t)v * 100;

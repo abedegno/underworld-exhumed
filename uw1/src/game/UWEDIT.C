@@ -138,6 +138,25 @@ int main(int argc, char *argv[])
     titlescr();
     CHECKPOINT(2);
     dprintf("after titlescr\n");
+#ifndef __TURBOC__
+    if (port_shared_test_start()) {
+        if (getenv("UW_COOP_TEST_RESUME")) {
+            int slot = atoi(getenv("UW_COOP_TEST_RESUME"));
+            if (slot < 1 || slot > 4) slot = 1;
+            if (!RestoreGame(slot)) pfatal_code(ERR_READ | 0xC);
+        } else {
+            if (getenv("UW_COOP_BOT_CHARGEN")) {
+                if (!create_player()) pfatal_code(ERR_READ | 0xC);
+            } else {
+                init_char(0);
+                strcpy(player->name, "Coop Test");
+            }
+            if (!GetLevel(1)) pfatal_code(ERR_READ | 0xC);
+            player_setup(0x20,2,1);PlayerFacing=0;PlayerHeading=0;
+        }
+        change_screen(MODE_GAME);editchng(0x7FFE);
+    } else
+#endif
     real_start(1);
     CHECKPOINT(3);
     in_game = 1;
@@ -206,6 +225,9 @@ void far init_world(int argc, char *argv[])
    clear_dir, so the working LEV.ARK copy does not outlive the program. */
 void far free_world(char flag)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     grfx_close();
     chdir(CurDir);
     free_input();
@@ -271,6 +293,7 @@ void far clearobj(int unused)
 void far change_screen(int mode)
 {
 #ifndef __TURBOC__
+    port_shared_modal(mode);
     /* port only: --enhance mouse-look off while the 3D view gives way, and back as it was when
        it returns: the input modes with a bit of 0x11, as UltimaHacks' setInterfaceMode tests */
     port_mouse_look_screen(1, (inplist->mode & 0x11) != 0);
@@ -359,6 +382,9 @@ void far free_demscr(void)
    special cursor mode ended. */
 void far reset_game(void)
 {
+#ifndef __TURBOC__
+    port_shared_campaign_reset();
+#endif
     Punt_player_inv();
     FixPlayerEquips();
     SET_HEADING(ThePlayer, 0);
@@ -416,6 +442,9 @@ void far real_death(int how)
     reset_game();
     FAR_COPY((unsigned char far *)pal, palette, 0x300);
     fadeout(pal, 2);
+#ifndef __TURBOC__
+    if (getenv("UW_COOP_TEST_CAMPAIGN")) fprintf(stderr, "SHARED CAMPAIGN ending returned to menu how=%d\n", how);
+#endif
     real_start(0);
     in_game = 1;
     scrnum = scr;
@@ -450,6 +479,10 @@ void far div_zero_ovr112_661(void)
 unsigned char far new_player_pos(void)
 {
     int16 x, y;
+
+#ifndef __TURBOC__
+    if (port_shared_guest_travel()) return 1;
+#endif
 
     if (NewPlayerX > 0) {
         if (NewPlyFade & 1) {

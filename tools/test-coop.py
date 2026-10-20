@@ -16,24 +16,32 @@ def main():
     args = parser.parse_args()
     out = ROOT / 'build' / 'coop-tests'
     out.mkdir(parents=True, exist_ok=True)
-    binary = out / 'test-coop'
+    suffix = '.exe' if os.name == 'nt' else ''
+    binary = out / ('test-coop' + suffix)
+    libs = ['-lws2_32', '-lwinmm'] if os.name == 'nt' else []
     flags = ['-std=c11', '-D_POSIX_C_SOURCE=200809L', '-Wall', '-Wextra', '-Werror', '-g']
+    if os.name == 'nt':
+        flags += ['-mno-ms-bitfields']  # the same DOS struct layout as the native game builds
     if args.sanitize:
         flags += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
     subprocess.run(shlex.split(args.cc) + flags + ['coop/protocol.c', 'coop/session.c',
-                   'tests/coop/test_coop.c', '-o', str(binary)], cwd=ROOT, check=True)
+                   'tests/coop/test_coop.c', '-o', str(binary)] + libs, cwd=ROOT, check=True)
     subprocess.run([str(binary)], cwd=ROOT, check=True, timeout=30)
+    shared = out / ('test-shared' + suffix)
+    subprocess.run(shlex.split(args.cc) + flags + ['coop/session.c', 'coop/protocol.c', 'coop/shared_net.c',
+                   'tests/coop/test_shared.c', '-o', str(shared)] + libs, cwd=ROOT, check=True)
+    subprocess.run([str(shared)], cwd=ROOT, check=True, timeout=60)
     if args.adapter:
         runtime = ROOT / 'exhume' / 'runtime' / 'port'
         for game in (1, 2):
-            binary = out / f'test-uw{game}-adapter'
+            binary = out / (f'test-uw{game}-adapter' + suffix)
             includes = ['-I', str(ROOT / f'uw{game}' / 'src' / 'port'), '-I', str(runtime),
                         '-I', str(runtime / 'platform'), '-I', str(runtime / 'include'),
                         '-iquote', str(ROOT / f'uw{game}' / 'src' / 'include'),
                         '-iquote', str(ROOT / 'exhume' / 'runtime' / 'include')]
             subprocess.run(shlex.split(args.cc) + flags + ['-Wno-unknown-pragmas', '-Wno-comment', '-Wno-pragma-pack', '-pthread',
                            f'-DCOOP_GAME={game}'] + includes + ['coop/protocol.c', 'coop/session.c',
-                           'tests/coop/test_adapter.c', '-o', str(binary)], cwd=ROOT, check=True)
+                           'tests/coop/test_adapter.c', '-o', str(binary)] + libs, cwd=ROOT, check=True)
             subprocess.run([str(binary)], cwd=ROOT, check=True, timeout=30)
 
 

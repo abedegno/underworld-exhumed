@@ -406,6 +406,9 @@ void far player_3dget(void)
 
 void far player_3dtalk(void)
 {
+#ifndef __TURBOC__
+    if (port_shared_avatar(newPlObj)) { scroll_print("Your companion.\n"); return; }
+#endif
     mouse_release(1);
     TalkTo(newPlObj);
 }

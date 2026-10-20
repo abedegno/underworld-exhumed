@@ -1329,6 +1329,10 @@ do_goal:
 unsigned char far set_up_target(void)
 {
     mytarget = Obj_IntTMem(OBJ_GTARG(meptr));
+#ifndef __TURBOC__
+    mytarget = (struct Object *)port_shared_target(meptr, mytarget);
+    if (port_shared_avatar(mytarget)) SET_GTARG(meptr, Obj_MemTPtr(mytarget));
+#endif
     if (mytarget->hp <= 0)
         return 0;
     txpos = OBJ_HOMEX(mytarget);
@@ -1477,6 +1481,12 @@ unsigned char far damage_critter(struct Object far *obj, unsigned char damage,
     register int ratio;
 
     minor = OBJ_MINOR(obj);
+#ifndef __TURBOC__
+    if (port_shared_avatar(obj)) {
+        if (!port_shared_friendly_source(from)) { SET_DAMAGE(obj, OBJ_DAMAGE(obj) + damage); obj->hp = obj->hp > damage ? obj->hp - damage : 0; }
+        return obj->hp == 0;
+    }
+#endif
     index = obj->id & ID_INCLASS;
     cr = &Creature[(minor << 4) + index];
     victim = cr;
@@ -1488,6 +1498,9 @@ unsigned char far damage_critter(struct Object far *obj, unsigned char damage,
     else {
         m = Obj_MemTPtr(from);
         who = m >= NUM_MOBILE ? 0 : m;
+#ifndef __TURBOC__
+        if (port_shared_avatar(from)) who = 1;
+#endif
     }
     if (who)
         obj->last_hit = who;

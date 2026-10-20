@@ -813,6 +813,9 @@ void far play_instrument(register int which)
     char hist[16];
     register int key;
 
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     memset(hist, 0, 16);
     hpos = 0;
     game_sprint(0xFA);
@@ -868,6 +871,9 @@ void far play_instrument(register int which)
         }
     }
     AIL_release_channel(music_driver, ch);
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
     if (which == 1 && PlayerLevel == 3 && abs(OBJ_HOMEX(ThePlayer) - 0x18) <= 2
             && abs(OBJ_HOMEY(ThePlayer) - 0x2D) <= 2 && play_cup_tune(hist))
         return;

@@ -56,6 +56,14 @@
 #include "ui.h"
 #include "view3d.h"
 
+#ifndef __TURBOC__
+#define COOP_PLAYER(index) port_shared_player_index(index)
+#define COOP_OTHER(index) (!port_shared_player_index(index))
+#else
+#define COOP_PLAYER(index) index == 1
+#define COOP_OTHER(index) index != 1
+#endif
+
 /* Declared in each file that uses it, its own way (no header). */
 unsigned char far IsMobElem(struct Object far *obj);
 
@@ -98,6 +106,30 @@ int16 fromwho;
 static struct Object far *curr_weapon;
 static struct Weapon *weapon_data;
 unsigned char power;
+
+#ifndef __TURBOC__
+/* Only state which survives between player_attack calls belongs to a seat.
+   The hit calculation scratch (fromwho, damage, hitobj, etc.) stays on the
+   calling stack of the one authoritative world. */
+void port_shared_combat_state(int which,int save)
+{
+    static struct {
+        int16 queued,key,elapsed,state,reach;
+        int32 time;
+        unsigned char pow,fire;
+        struct Object *weapon;
+        struct Weapon *data;
+    } seats[2];
+    static int initialized;
+    if(which<0){memset(&seats[1],0,sizeof seats[1]);seats[1].key=-1;return;}
+#define FIELD(member,global) do{if(save)seats[which].member=global;else global=seats[which].member;}while(0)
+    if(!initialized){seats[1].key=-1;initialized=1;}
+    FIELD(queued,pQatt);FIELD(key,attackKey);FIELD(elapsed,elapsed);FIELD(state,swing_state);FIELD(time,otime);
+    FIELD(pow,play_pow);FIELD(fire,fire_mode);FIELD(weapon,curr_weapon);FIELD(data,weapon_data);
+    FIELD(reach,wsize);
+#undef FIELD
+}
+#endif
 
 /* Picks the hit location (0..3) from the defender's bottom and top (dz, dtop) and the
    attack's (az, atop): a blow whose middle is below the defender's bottom gives 2, above its
@@ -160,7 +192,12 @@ int far set_hitobj(struct MotionCalc *c)
             continue;
         if (idx == fromwho)
             continue;
-        if (fromwho == 1 && IsMobElem(obj) && OBJ_ALLY(obj) && (last - 1 != i || best != 100000L))
+#ifndef __TURBOC__
+        /* Party melee passes through the other avatar, without armor rolls. */
+        if (COOP_PLAYER(fromwho) && COOP_PLAYER(idx))
+            continue;
+#endif
+        if (COOP_PLAYER(fromwho) && IsMobElem(obj) && OBJ_ALLY(obj) && (last - 1 != i || best != 100000L))
             continue;
         t = oCollisions[i].offset & MAP_MASK;
         targx = ((c->x >> 3) + t) & MAP_MASK;
@@ -210,7 +247,7 @@ void far find_wall_coll(int heading, int dist, struct MotionCalc *c)
             tx = curP->x >> 3;
             ty = curP->y >> 3;
             SET_Z(obj, curP->z + 8);
-            if (fromwho == 1)
+            if (COOP_PLAYER(fromwho))
                 play_effect(7, curP->x, curP->y, 0);
             if (add_animobj(Obj_MemTPtr(obj), 2, 0, tx, ty) == -1)
                 Obj_Free(obj);
@@ -242,7 +279,7 @@ char far resolve_attack(void)
     curP->height = (wsize * 2 + 1) * 4;
     att = critdata + fromwho;
     curP->z = OBJ_Z(att) + ComObjData[OBJ_ITEM(att)].height * (towhere / 3) / 3;
-    if (fromwho == 1)
+    if (COOP_PLAYER(fromwho))
         curP->z += PlayerPitch / 0x200;
     hitz = curP->z + ComObjData[OBJ_ITEM(att)].height / 6;
     curP->x = (OBJ_HOMEX(att) << 3) + OBJ_FINEX(att);
@@ -279,6 +316,9 @@ char far resolve_attack(void)
    (result 2) sets criti and multiplies the damage by 1 or 2 at even odds; if the player is
    the one hit, the screen flashes and the armour at that location takes wear. A bad miss
    (result -1) by the player against a critter not marked passive wears his weapon. */
+#ifndef __TURBOC__
+#define frp_check shared_frp_check
+#endif
 int far frp_check(int attacker, int defender)
 {
     struct Object far *def;
@@ -288,7 +328,7 @@ int far frp_check(int attacker, int defender)
 
     def = Obj_IntTMem(defender);
     if (OBJ_MAJOR(def) != MAJOR_CREATURE) {
-        if (attacker == 1 && OBJ_CLASS(def) == CLASS_DOOR
+        if (COOP_PLAYER(attacker) && OBJ_CLASS(def) == CLASS_DOOR
             && (int)(rand() * 12L / 0x8000L) < (def->id & 7) << 1) {
             slot = INV_WEAPON_HAND - player->lefty;
             DamageInventory(slot, rollem(2, 4), 4, 0, 1);
@@ -296,14 +336,14 @@ int far frp_check(int attacker, int defender)
         return 0;
     }
     cr = &Creature[OBJ_INMAJOR(def)];
-    if (hitobj == 1)
+    if (COOP_PLAYER(hitobj))
         askill -= cmbModTH[hitloc];
     result = skill_check(askill + hitangle, cr->defence);
     criti = 0;
     if (result == 2) {
         criti = 1;
         damage = damage * (((rand() & 0x1F) + 0x30) >> 5);
-        if (defender == 1) {
+        if (COOP_PLAYER(defender)) {
             fill_FB(0xB8);
             if ((slot = hitloc + 1 & 3) == 3)
                 slot += rand() % 5 == 0;
@@ -313,13 +353,24 @@ int far frp_check(int attacker, int defender)
         }
         return 0;
     }
-    if (result == -1 && attacker == 1
+    if (result == -1 && COOP_PLAYER(attacker)
         && !Creature[Obj_IntTMem(hitobj)->id & ID_INMAJOR].passive) {
         slot = INV_WEAPON_HAND - player->lefty;
         DamageInventory(slot, rollem(2, 3), 4, 0, 1);
     }
     return 1 - result;
 }
+
+#ifndef __TURBOC__
+#undef frp_check
+int far frp_check(int attacker,int defender)
+{
+    if(attacker!=defender && port_shared_player_index(attacker) && port_shared_player_index(defender))return 1;
+    int old=port_shared_context(defender);
+    int result=shared_frp_check(attacker,defender);
+    port_shared_context_end(old);return result;
+}
+#endif
 
 /* Rolls and applies a hit's damage. damage is turned into dice, (damage / 6)d6 plus
    1d(damage % 6), with a minimum of 2; the roll is scaled by power / 128 (the charge) and
@@ -330,6 +381,9 @@ int far frp_check(int attacker, int defender)
    is 4, physical). The rest is feedback: the hit sound (effect 4 for any attacker),
    the critter's health shown in the view frame when the player is the attacker, blood for
    critters that bleed (twice on a player's critical), and a dust effect otherwise. */
+#ifndef __TURBOC__
+#define do_damage shared_do_damage
+#endif
 void far do_damage(int type)
 {
     int ddone;
@@ -354,7 +408,7 @@ void far do_damage(int type)
         damage += rollem(1, rem);
     ddone = damage * power >> 7;
     ddone += hitangle;
-    if (hitobj == 1)
+    if (COOP_PLAYER(hitobj))
         play_effect_here(3, 0x40, ddone << 2);
     else
         play_effect(4, (targx << 3) + OBJ_FINEX(def), (targy << 3) + OBJ_FINEY(def), ddone << 2);
@@ -365,7 +419,7 @@ void far do_damage(int type)
             hitloc = hitloc & 4;
             armour = Creature[item & ID_INMAJOR].armour[0];
         }
-        if (hitobj != 1 && OBJ_POWERFUL(def))
+        if (COOP_OTHER(hitobj) && OBJ_POWERFUL(def))
             armour = armour * 5 / 3;
         if (armour > ddone)
             ddone = 0;
@@ -374,7 +428,7 @@ void far do_damage(int type)
     }
     if ((level = ddone / 4) >= 4)
         level = 3;
-    if (hitobj == 1 && player->easy)
+    if (COOP_PLAYER(hitobj) && player->easy)
         ddone >>= 1;
     result = damage_item(def, Obj_IntTMem(fromwho), targx, targy, ddone, type);
     if (ddone == 0)
@@ -390,7 +444,7 @@ void far do_damage(int type)
         return;
     }
     if (item >> 6 == MAJOR_CREATURE) {
-        if (fromwho == 1) {
+        if (COOP_PLAYER(fromwho)) {
             if (Creature[item & ID_INMAJOR].avghit != 0)
                 fx = def->hp * 3 / Creature[item & ID_INMAJOR].avghit;
             else
@@ -401,7 +455,7 @@ void far do_damage(int type)
         }
         if (Creature[item & ID_INMAJOR].blood) {
             put_effect(def, 0, 1, level, hitz_tab[hitloc], targx, targy);
-            if (criti && fromwho == 1)
+            if (criti && COOP_PLAYER(fromwho))
                 put_effect(def, 0, 1, level, hitz_tab[hitloc] + (rand() & 1) * 5 - 2, targx, targy);
             return;
         }
@@ -420,6 +474,15 @@ void far do_damage(int type)
     } else
         put_effect(def, 0xB, 1, level, -hitz, targx, targy);
 }
+
+#ifndef __TURBOC__
+#undef do_damage
+void far do_damage(int type)
+{
+    int old=port_shared_context(hitobj);
+    shared_do_damage(type);port_shared_context_end(old);
+}
+#endif
 
 /* The sound of a miss. hit 0 is a swing at nothing (effect 10). Otherwise the blow was
    blocked: effect 7 for weapon kind 1 against armour kind 1 (metal), else effect 8. The
@@ -449,7 +512,7 @@ char far do_miss(int hit)
             weapon = Creature[fromwho & ID_INMAJOR].weapon_kind;
         else
             weapon = 1;
-        if (hitobj == 1) {
+        if (COOP_PLAYER(hitobj)) {
             armour = AskInventory(slot = hitloc + 1 & 3);
             item = OBJ_ITEM(FARNULLTRAP(armour));   /* read before the test: 19h for none */
             if (armour == 0)
@@ -492,9 +555,15 @@ char far do_attack(void)
 {
     int result;
 
+#ifndef __TURBOC__
+    if(getenv("UW_COOP_BOT_HOME"))fprintf(stderr,"SHARED MELEE actor=%d reach=%d power=%d skill=%d damage=%d\n",fromwho,wsize,power,askill,damage);
+#endif
     if (!resolve_attack())
         return do_miss(0);
-    if (fromwho != 1 && hitobj != 1 && IsMobElem(Obj_IntTMem(hitobj))
+#ifndef __TURBOC__
+    if(getenv("UW_COOP_BOT_HOME"))fprintf(stderr,"SHARED MELEE target=%d\n",hitobj);
+#endif
+    if (COOP_OTHER(fromwho) && COOP_OTHER(hitobj) && IsMobElem(Obj_IntTMem(hitobj))
         && !(OBJ_ALLY(Obj_IntTMem(hitobj)) ^ OBJ_ALLY(Obj_IntTMem(fromwho))))
         return 0;
     compute_hitangle();
@@ -586,7 +655,11 @@ void far DoPlayerWeapon(register struct Weapon *wd, struct Object far *weap, int
         damage = player->skills[SKILL_BAREHAND] * 2 / 5 + Creature[ThePlayer->id & ID_INMAJOR].attr[ATTR_STR] / 6 + 4;
     else
         damage = wd->damage[swing_kind[swing - 1]] + Creature[ThePlayer->id & ID_INMAJOR].attr[ATTR_STR] / 9;
+#ifndef __TURBOC__
+    fromwho = Obj_MemTPtr(ThePlayer);
+#else
     fromwho = 1;
+#endif
     towhere = swing;
     if (weap != 0) {
         decode_obj_spell(weap, &major, &effect, (unsigned char *)&flag);
@@ -804,10 +877,16 @@ char far critter_attack(struct Object far *npc, int swing, unsigned char charge,
         damage += rand() % 12 + 4;
     }
     result = do_attack();
-    if (result && hitobj == 1 && player->poison < poison) {
+    #ifndef __TURBOC__
+    int old=port_shared_context(hitobj);
+#endif
+    if (result && COOP_PLAYER(hitobj) && player->poison < poison) {
         if (check_res(ThePlayer, 1, DMG_POISON))
             player->poison = poison;
     }
+#ifndef __TURBOC__
+    port_shared_context_end(old);
+#endif
     return result;
 }
 

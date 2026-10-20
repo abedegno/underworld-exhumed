@@ -672,6 +672,12 @@ void far check_victory(void)
     struct Object far *gate;
     union Link far *head;
 
+#ifndef __TURBOC__
+    int shared_scene = EndGameMode_dseg_1C8F || player->talismans == 0;
+    if (port_shared_guest()) return;
+    if (shared_scene) port_shared_story(1);
+#endif
+
     if (EndGameMode_dseg_1C8F)
     {
         inplist->mode = 0;
@@ -680,6 +686,9 @@ void far check_victory(void)
         mouse_hide();
         grfx_clear();
         LoadBitMap_ovr141_0(7, "DATA\\win1.byt");
+#ifndef __TURBOC__
+        if (getenv("UW_COOP_TEST_CAMPAIGN")) fprintf(stderr, "SHARED ENDING win1 loaded\n");
+#endif
         while (mouse_get_input() < 0)
             ;
         grSoftPageFlip();
@@ -687,6 +696,9 @@ void far check_victory(void)
         game_stats();
         grSoftPageFlip();
         copy_visible_to_hidden();
+#ifndef __TURBOC__
+        if (getenv("UW_COOP_TEST_CAMPAIGN")) fprintf(stderr, "SHARED ENDING win2 with character stats loaded\n");
+#endif
         while (mouse_get_input() < 0)
             ;
         real_death(0);
@@ -717,6 +729,9 @@ void far check_victory(void)
         new_player_pos();
         NewPlyFade |= 1;
     }
+#ifndef __TURBOC__
+    if (shared_scene) port_shared_story(0);
+#endif
 }
 
 /* UW1: plants the silver seed in the square ahead of the player. Not on level 9 (-1).
@@ -821,6 +836,10 @@ void far player_is_dead(void)
 {
     struct Object far *bones;
     char ok;
+
+#ifndef __TURBOC__
+    if (port_shared_death()) return;
+#endif
 
     if (player->talismans == 0)
     {

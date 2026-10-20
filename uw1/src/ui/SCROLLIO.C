@@ -104,6 +104,9 @@ void far scroll_wait(int ticks, char mouse)
     uint32 end;
     int key;
 
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     mouse_release(1);
     key = mouse_get_input();
     end = GAME_TIME() + ticks;
@@ -117,6 +120,9 @@ void far scroll_wait(int ticks, char mouse)
     set_mouse_in();
     if (mouse_in_scroll & mouse)
         mouse_hide();
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
 }
 
 /* Advances the message scroll's rolled-paper edges, left and right of the text, by one of
@@ -514,6 +520,9 @@ int far wdialog(char *prompt, char *initial, char *result, char anychar, int max
     int pos;
     int i;
 
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     if (maxlen > 50)
         maxlen = 50;
     do_main_scroll();
@@ -635,6 +644,9 @@ int far wdialog(char *prompt, char *initial, char *result, char anychar, int max
         strcpy(result, text);
         scroll->cur_x = x;
     }
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
     return key;
 }
 
@@ -645,6 +657,9 @@ int far wyorn(char *question, int id, char *answer)
     char sel;
     int key;
 
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     cur = *answer;
     sel = *answer;
     do_main_scroll();
@@ -680,8 +695,14 @@ int far wyorn(char *question, int id, char *answer)
     if (key == KEY_ESC) {
         wd_bool(0);
         *answer = 0;
+#ifndef __TURBOC__
+        port_shared_story(0);
+#endif
         return -1;
     }
     *answer = cur;
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
     return key;
 }

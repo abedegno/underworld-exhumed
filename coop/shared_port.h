@@ -1,0 +1,54 @@
+#ifndef UW_SHARED_PORT_H
+#define UW_SHARED_PORT_H
+#include <stdint.h>
+struct PlatConfig;
+struct PlatPointer;
+void port_shared_enable(void);
+int port_shared_on(void);
+int port_shared_start(void);
+int port_shared_client_run(const struct PlatConfig *config);
+int port_shared_step(void);
+int port_shared_guest(void);
+void port_shared_guest_physics(void);
+void port_shared_poll_input(void);
+int port_shared_click(int16_t *x,int16_t *y);
+void port_shared_key(uint8_t code);
+void port_shared_pointer(const struct PlatPointer *event);
+void port_shared_scanout(unsigned char *pixels,int *w,int *h,unsigned char palette[768]);
+void port_shared_flip(void);
+void port_shared_reset(void);
+void port_shared_before_save(void);
+int port_shared_avatar(const void *object);
+int port_shared_friendly_source(const void *object);
+int port_shared_art(const void *object,int item);
+const void *port_shared_target(const void *actor,const void *target);
+void port_coop_banner(unsigned char *pixels,int w,int h,unsigned char palette[768],const char *text);
+int port_shared_test_start(void);
+void port_shared_keyboard_seat(int seat);
+void port_shared_mouse_seat(int seat);
+void port_shared_input_seat(int seat);
+void port_shared_campaign_reset(void);
+void port_shared_campaign_load(void);
+int port_shared_player_index(int index);
+int port_shared_near_players(int x,int y,int distance);
+int port_shared_context(int index);
+void port_shared_context_end(int previous);
+struct Object;
+void port_shared_killed(int index,struct Object *npc);
+char port_shared_death_check(struct Object *npc,char mode);
+int port_shared_death(void);
+int port_shared_guest_travel(void);
+void port_shared_modal(int mode);
+void port_shared_story(int showing);
+void port_shared_level_hacks(int level,int mode);
+void port_shared_config(const struct PlatConfig *config);
+void port_shared_tick(void);
+void port_shared_finished(void);
+void port_shared_quit(void);
+int port_shared_world_time_stop(void);
+int port_shared_party_alive(void);
+void port_shared_terrain(struct Object *avatar,int height,int rising);
+int port_shared_mouse_look(void);
+int port_coop_role(void);
+const char *port_coop_endpoint(void);
+#endif

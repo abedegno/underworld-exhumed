@@ -778,7 +778,13 @@ char far create_player(void)
     char r;
 
     init_char(1);
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     r = strt_chargen();
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
     load_weapcm();
     return r;
 }

@@ -63,6 +63,12 @@
 #include "sound.h"
 #include "sys.h"
 
+#ifndef __TURBOC__
+#define COOP_MOTION_PLAYER(index) port_shared_player_index(index)
+#else
+#define COOP_MOTION_PLAYER(index) index == 1
+#endif
+
 /* This file's _BSS, in UW1 DS:2768..288B (UW2 DS:25C4..26E9, with hit_obj and trycnt). PN,
    the CNs, PT and the CTs are used only by other files (seg006, seg007, seg008, seg035 and
    overlays). Ppd is the collision record (struct MotionCalc, map.h) of whatever
@@ -253,7 +259,7 @@ unsigned char far space_to_motion(char pos, char check)
         MP.dt = CP->time;
     }
     MP.done = 0;
-    if ((Ppd.index == 1 || MP.vel[2] != 0) && check) {
+    if ((COOP_MOTION_PLAYER(Ppd.index) || MP.vel[2] != 0) && check) {
         TerrainCheck(CP->b24);
         ObjectCheck(0, 0);
     }
@@ -309,7 +315,7 @@ void far back_to_space(void)
     CP->y = (MP.pos[1] << 5) + (MP.frac[1] >> 8);
     CP->z = (MP.pos[2] << 3) + (MP.frac[2] >> 8);
     if (Ppd.hits0 & 0x2000 && abs(MP.pos[2] - Ppd.floor) <= CP->radius
-        && Ppd.index == 1 && CP->vel[2] == 0)
+        && COOP_MOTION_PLAYER(Ppd.index) && CP->vel[2] == 0)
         CP->z = GetSlopeHgt(CP->x, CP->y);
     CP->heading = Ppd.heading;
 }
@@ -649,7 +655,7 @@ unsigned char far set_resterr(unsigned bits)
     if (bits & 0x1000)
         return FOOT_AIR;
     if (bits & 4) {
-        if (Ppd.index == 1 && (bits & 3) == TERRAIN_WATER && (bits & 0xF8) != (bits & 0x90))
+        if (COOP_MOTION_PLAYER(Ppd.index) && (bits & 3) == TERRAIN_WATER && (bits & 0xF8) != (bits & 0x90))
             return FOOT_SHORE;
         return 1 << (bits & 3);
     }

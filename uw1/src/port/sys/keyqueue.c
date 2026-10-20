@@ -150,6 +150,7 @@ static void modifiers(void)
    code in the high byte. */
 int key(void)
 {
+    port_shared_poll_input();
     uint8_t al;
     uint16_t ax, bx;
     int i;
@@ -183,4 +184,33 @@ int key(void)
         modifiers();
         return (uint16_t)(ax << 8 | ax >> 8);
     }
+}
+
+/* Switch only the keyboard controller state; the game world is never copied. */
+void port_shared_keyboard_seat(int seat)
+{
+    static struct { unsigned char bytes[0x160]; uint16_t write; uint8_t held,e0,last; uint32_t ms; } saved[2];
+    static int current, ready;
+    while (atomic_flag_test_and_set(&lock)) ;
+    if (!ready) {
+        memcpy(saved[1].bytes,D+0x1E0,sizeof saved[1].bytes);
+        memset(saved[1].bytes+2,0,7);memset(saved[1].bytes+0xB,0,128);
+        memset(saved[1].bytes+0x120,0,64);
+        saved[1].bytes[0x8C]=0;saved[1].bytes[0x8D]=3;saved[1].write=0x300;ready=1;
+    }
+    if (seat<0) {
+        memset(saved[1].bytes+2,0,7);memset(saved[1].bytes+0xB,0,128);
+        memset(saved[1].bytes+0x120,0,64);saved[1].bytes[0x8C]=0;saved[1].bytes[0x8D]=3;
+        saved[1].write=0x300;saved[1].held=saved[1].e0=saved[1].last=0;saved[1].ms=0;
+        atomic_flag_clear(&lock);return;
+    }
+    if (seat!=current) {
+        memcpy(saved[current].bytes,D+0x1E0,sizeof saved[current].bytes);
+        saved[current].write=atomic_load(&write_ptr);saved[current].held=held;
+        saved[current].e0=held_e0;saved[current].last=last_e0;saved[current].ms=held_ms;
+        memcpy(D+0x1E0,saved[seat].bytes,sizeof saved[seat].bytes);
+        atomic_store(&write_ptr,saved[seat].write);held=saved[seat].held;held_e0=saved[seat].e0;
+        last_e0=saved[seat].last;held_ms=saved[seat].ms;current=seat;
+    }
+    atomic_flag_clear(&lock);
 }

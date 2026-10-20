@@ -88,6 +88,9 @@ static int16 objcount;
    count. MAP.C's Map_Load then overwrites the stacks with the level's own. */
 void far Map_ObjFix(void)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     struct Tile far *t;
     uint16 far *p;
     int i;
@@ -153,6 +156,9 @@ unsigned char far chkTenacious(struct Object far *obj)
    (or holding one). */
 unsigned char far Obj_Elem_Fate(int range, struct Object far *obj)
 {
+#ifndef __TURBOC__
+    if (port_shared_avatar(obj)) return 0;
+#endif
     if (obj == 0)
         return 0;
     if (range)
@@ -205,6 +211,9 @@ void far Obj_GarbageCollect(int range, int count)
         dy = abs(py - y);
         for (x = 0; x < MAP_SIZE; t++, x++) {
             if (dy + abs(px - x) > 10 - range) {
+#ifndef __TURBOC__
+                if (port_shared_near_players(x,y,10-range)) continue;
+#endif
                 tilehead = &t->objects;
                 link = *tilehead;
                 while (link.f.index > 0) {

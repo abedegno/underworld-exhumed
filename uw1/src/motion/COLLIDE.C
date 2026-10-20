@@ -54,6 +54,9 @@
 #include "motion.h"
 #include "object.h"
 #include "uw2.h"
+#ifndef __TURBOC__
+#include "sys.h"
+#endif
 
 /* Declared in each file that uses it, its own way (no header). */
 unsigned char far IsMobElem(struct Object far *obj);
@@ -511,6 +514,15 @@ void far ObjectCheck(unsigned char flat, unsigned char useflag)
                 if (link->f.index == curP->index)
                     continue;
                 obj = Obj_PtrTMem(link);
+#ifndef __TURBOC__
+                /* Companions can pass in the Abyss's one-person corridors.
+                   Projectiles, item placement and NPCs keep normal collisions. */
+                if (curP->height == ComObjData[ITEM_ADVENTURER].height
+                    && curP->radius == ComObjData[ITEM_ADVENTURER].radius
+                    && port_shared_avatar(Obj_IntTMem(curP->index))
+                    && port_shared_avatar(obj))
+                    continue;
+#endif
                 com = &ComObjData[OBJ_ITEM(obj)];
                 if (isnpc && com->c3_2)
                     continue;

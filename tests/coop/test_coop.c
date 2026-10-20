@@ -3,16 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <time.h>
+#include "test_platform.h"
 
 static const struct coop_pose pose1 = {3, 1024, 2048, -8, 65535, 45, 60, 1};
 static const struct coop_pose pose2 = {3, 3072, 4096, 88, 32768, 20, 30, 1};
 static uint64_t now = 1000;
-static void pause_briefly(void) { struct timespec t = {0, 1000000}; nanosleep(&t, NULL); }
+static void pause_briefly(void) { test_pause(); }
 
 static void protocol(void)
 {
@@ -57,13 +53,13 @@ static void protocol(void)
 
 static unsigned free_port(void)
 {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    test_socket fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;
-    socklen_t n = sizeof addr;
-    assert(fd >= 0);
+    test_socklen n = sizeof addr;
+    assert(test_valid(fd));
     memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET; addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     assert(!bind(fd, (struct sockaddr *)&addr, sizeof addr));
-    assert(!getsockname(fd, (struct sockaddr *)&addr, &n)); close(fd);
+    assert(!getsockname(fd, (struct sockaddr *)&addr, &n)); test_close(fd);
     return ntohs(addr.sin_port);
 }
 static void endpoints(void)
@@ -148,13 +144,13 @@ static void host_restart(void)
     assert(h.have_remote && c.have_remote);
     coop_close(&h); coop_close(&c);
 }
-static int raw_peer(unsigned port)
+static test_socket raw_peer(unsigned port)
 {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in a; struct timeval t = {1, 0};
-    assert(fd >= 0); memset(&a, 0, sizeof a);
+    test_socket fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in a;
+    assert(test_valid(fd)); memset(&a, 0, sizeof a);
     a.sin_family = AF_INET; a.sin_addr.s_addr = htonl(INADDR_LOOPBACK); a.sin_port = htons((uint16_t)port);
-    assert(!setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &t, sizeof t));
+    test_timeout(fd);
     assert(!connect(fd, (struct sockaddr *)&a, sizeof a)); return fd;
 }
 static void fragmentation(void)
@@ -162,33 +158,35 @@ static void fragmentation(void)
     struct coop_session h;
     struct coop_packet p = {COOP_HELLO, 1, 0, 0, {0}}, got;
     uint8_t data[COOP_PACKET_SIZE], reply[COOP_PACKET_SIZE];
-    unsigned port = host(&h, 1); int fd = raw_peer(port), i;
+    unsigned port = host(&h, 1); test_socket fd = raw_peer(port); int i;
     assert(!coop_encode(data, &p));
     for (i = 0; i < COOP_PACKET_SIZE; i++) {
-        assert(send(fd, data + i, 1, 0) == 1);
+        assert(send(fd, (const char *)data + i, 1, 0) == 1);
         coop_tick(&h, &pose1, ++now); pause_briefly();
     }
     for (i = 0; i < 100 && h.status != COOP_CONNECTED; i++) { coop_tick(&h, &pose1, ++now); pause_briefly(); }
-    assert(recv(fd, reply, sizeof reply, MSG_WAITALL) == sizeof reply);
+    assert(recv(fd, (char *)reply, sizeof reply, MSG_WAITALL) == sizeof reply);
     assert(!coop_decode(&got, reply, sizeof reply, 1) && got.type == COOP_WELCOME);
     p.type = COOP_STATE; p.sequence = 1; p.pose = pose2; assert(!coop_encode(data, &p));
-    assert(send(fd, data, 7, 0) == 7); coop_tick(&h, &pose1, ++now); assert(!h.have_remote);
-    assert(send(fd, data + 7, sizeof data - 7, 0) == sizeof data - 7);
+    assert(send(fd, (const char *)data, 7, 0) == 7); coop_tick(&h, &pose1, ++now); assert(!h.have_remote);
+    assert(send(fd, (const char *)data + 7, sizeof data - 7, 0) == sizeof data - 7);
     for (i = 0; i < 100 && !h.have_remote; i++) { coop_tick(&h, &pose1, ++now); pause_briefly(); }
     assert(h.have_remote && h.remote.x == pose2.x);
-    assert(send(fd, data, sizeof data, 0) == sizeof data); /* duplicate sequence rejected */
+    assert(send(fd, (const char *)data, sizeof data, 0) == sizeof data); /* duplicate sequence rejected */
     for (i = 0; i < 100 && h.peer != -1; i++) { coop_tick(&h, &pose1, ++now); pause_briefly(); }
-    assert(!h.have_remote && h.status == COOP_WAITING); close(fd);
+    assert(!h.have_remote && h.status == COOP_WAITING); test_close(fd);
     fd = raw_peer(port); p.type = COOP_HELLO; assert(!coop_encode(data, &p)); data[4]++;
-    assert(send(fd, data, sizeof data, 0) == sizeof data);
+    assert(send(fd, (const char *)data, sizeof data, 0) == sizeof data);
     for (i = 0; i < 100; i++) { coop_tick(&h, &pose1, ++now); pause_briefly(); }
-    assert(recv(fd, reply, sizeof reply, MSG_WAITALL) == sizeof reply);
+    assert(recv(fd, (char *)reply, sizeof reply, MSG_WAITALL) == sizeof reply);
     assert(!coop_decode(&got, reply, sizeof reply, 1) && got.reason == COOP_WRONG_VERSION);
-    close(fd); coop_close(&h);
+    test_close(fd); coop_close(&h);
 }
 int main(void)
 {
+    test_sockets_start();
     protocol(); endpoints(); presence(1); presence(2); mismatch(); host_restart(); fragmentation();
+    test_sockets_stop();
     puts("co-op protocol, UW1/UW2 loopback, reconnect, timeout, capacity and fragmentation: PASS");
     return 0;
 }

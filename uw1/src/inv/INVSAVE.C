@@ -48,6 +48,9 @@ static union Link far *invSlots;        /* the inventory slots in the workspace 
 static struct StaticObj far *saveObjs;     /* the saved objects, numbered from 1 */
 static int16 saveNum;                   /* the number of saved objects */
 static void far *saveBuf;               /* the workspace */
+#ifndef __TURBOC__
+static int shared_pack;
+#endif
 
 /* Fills the workspace ws with the player object, the inventory and, in input mode 1, the
    cursor object (which is freed from memory: it is in the copy now). */
@@ -74,6 +77,9 @@ void far makePlayerInvCopy(void far *ws)
         if (!OBJ_ISQUANT(CursorObjPtr))
             InvSaveNexts(&CursorObjPtr->ol.link, &cursor->ol.word);
         chain.f.index = Obj_MemTPtr(CursorObjPtr);
+#ifndef __TURBOC__
+        if (!shared_pack)
+#endif
         Obj_FreeChain(&chain);
     }
 }
@@ -270,3 +276,52 @@ done:
         Obj_Add(&mapdata[GrSq].objects, ThePlayer);
     return ok;
 }
+
+#ifndef __TURBOC__
+/* The same relocatable inventory image as PLAYER.DAT, in a separate bounded
+   buffer. Packing preserves the live cursor; world saves detach it afterwards. */
+int port_shared_inventory_pack(void *buffer,int capacity)
+{
+    int size;
+    if(capacity<0x63+NUM_STATIC*8)return 0;
+    memset(buffer,0,(unsigned)capacity);shared_pack=1;
+    makePlayerInvCopy(buffer);shared_pack=0;
+    size=0x5B+(saveNum+1)*8;
+    return size<=capacity ? size : 0;
+}
+
+int port_shared_inventory_valid(const void *buffer,int length,int carrying)
+{
+    const unsigned char *bytes=buffer;
+    const struct Object *root=buffer;
+    const struct StaticObj *cursor=(const struct StaticObj*)(bytes+sizeof(struct Object));
+    const union Link *slots=(const union Link*)(cursor+1);
+    const struct StaticObj *objects=(const struct StaticObj*)(slots+NUM_INV_SLOTS);
+    unsigned short stack[NUM_STATIC*2+2];unsigned char seen[NUM_STATIC+1];
+    int count,top=0,i,n,visited=0;
+    if(length<0x63 || length>0x63+NUM_STATIC*8 || (length-0x5B)%8 || carrying<0 || carrying>1)return 0;
+    count=(length-0x5B)/8-1;memset(seen,0,sizeof seen);
+    if(OBJ_ITEM(root)!=ITEM_ADVENTURER || root->qn.f.next || root->whoami!=0xFD)return 0;
+    stack[top++]=(unsigned short)root->ol.f.link;
+    if(carrying && !OBJ_ISQUANT(cursor))stack[top++]=(unsigned short)cursor->ol.f.link;
+    while(top) {
+        n=stack[--top];if(!n)continue;
+        if(n>count || seen[n] || top>NUM_STATIC*2-2)return 0;
+        seen[n]=1;visited++;
+        stack[top++]=(unsigned short)objects[n].qn.f.next;
+        if(!OBJ_ISQUANT(&objects[n]))stack[top++]=(unsigned short)objects[n].ol.f.link;
+    }
+    if(visited!=count)return 0;
+    for(i=0;i<=INV_PACK_LAST;i++)if(slots[i].f.index>count || (slots[i].f.index && !seen[slots[i].f.index]))return 0;
+    return 1;
+}
+
+int port_shared_inventory_unpack(const void *buffer,int length,int carrying)
+{
+    extern uint16 *objptr,*objbot;
+    int count=(length-0x5B)/8-1;
+    if(!port_shared_inventory_valid(buffer,length,carrying) || objptr-objbot+1<count+carrying)return 0;
+    GameInputMode=carrying;CursorObjPtr=NULL;ClearInventory();
+    getPlayerInvCopy((void*)buffer);return 1;
+}
+#endif

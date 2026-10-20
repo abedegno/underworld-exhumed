@@ -319,6 +319,10 @@ void far check_physics(void)
     uint32 delta;
     unsigned char frames;
 
+#ifndef __TURBOC__
+    if (port_shared_guest()) { port_shared_guest_physics(); return; }
+#endif
+
     delta = GAME_TIME() - last_time;
     if (delta > 0x40)
     {

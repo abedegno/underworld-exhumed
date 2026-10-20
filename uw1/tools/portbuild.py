@@ -20,7 +20,7 @@ def main(argv):
     if not args.web and builder.portcheck.layout_flags(args.cc):
         def pkg_config(*flags):
             result = original(*flags)
-            return result + ['-lws2_32'] if flags == ('--libs',) else result
+            return result + ['-lws2_32', '-Wl,--wrap=plat_audio_open'] if flags == ('--libs',) else result
         builder.pkg_config = pkg_config
     return builder.main(argv)
 

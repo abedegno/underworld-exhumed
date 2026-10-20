@@ -1,8 +1,6 @@
 /* Exercise the actual adapter against game-global stubs, with no copyrighted assets. */
+#include "test_platform.h"
 #include <pthread.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <assert.h>
 #include <time.h>
 #include "../../coop/port.c"
@@ -28,25 +26,26 @@ static void pump_adapter(struct coop_session *guest, const struct coop_pose *pos
 {
     int i;
     for (i = 0; i < 100; i++) {
-        struct timespec t = {0, 1000000};
-        clock_ms += 10; port_coop_tick(); coop_tick(guest, pose, clock_ms); nanosleep(&t, NULL);
+        clock_ms += 10; port_coop_tick(); coop_tick(guest, pose, clock_ms); test_pause();
     }
 }
 int main(void)
 {
     struct sockaddr_in addr;
-    socklen_t size = sizeof addr;
+    test_socklen size = sizeof addr;
     struct coop_session guest;
     struct coop_pose pose = {3, 3072, 4096, 0, 1234, 20, 30, 1};
     uint8_t pixels[320 * 200], palette[768];
-    int fd, w, h, i;
+    test_socket fd;
+    int w, h, i;
     char port[10], endpoint[40];
+    test_sockets_start();
     port_coop_scanout(pixels, &w, &h, palette);
     for (i = 0; i < 320 * 200; i++) assert(pixels[i] == 77); /* solo is unchanged */
-    fd = socket(AF_INET, SOCK_STREAM, 0); assert(fd >= 0);
+    fd = socket(AF_INET, SOCK_STREAM, 0); assert(test_valid(fd));
     memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET; addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     assert(!bind(fd, (struct sockaddr *)&addr, sizeof addr));
-    assert(!getsockname(fd, (struct sockaddr *)&addr, &size)); close(fd);
+    assert(!getsockname(fd, (struct sockaddr *)&addr, &size)); test_close(fd);
     snprintf(port, sizeof port, "%u", ntohs(addr.sin_port));
     snprintf(endpoint, sizeof endpoint, "127.0.0.1:%s", port);
     assert(!port_coop_configure(COOP_HOST, port)); assert(port_coop_enabled());
@@ -79,6 +78,7 @@ int main(void)
         fclose(f);
     }
     coop_close(&session);
+    test_sockets_stop();
     printf("UW%d game adapter, solo scanout, player capture and map-marker lifecycle: PASS\n", COOP_GAME);
     return 0;
 }

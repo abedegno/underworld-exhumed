@@ -176,6 +176,10 @@ void far do_obj(struct Object far *o)
     }
     else
         item = o->id & ID_ITEM;
+#ifndef __TURBOC__
+    item = port_shared_art(o, item);
+    if (port_shared_avatar(o)) type = 1;
+#endif
     switch (type) {
     case 2:
         item &= 0x3F;

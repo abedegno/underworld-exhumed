@@ -1,8 +1,13 @@
 # Underworld Exhumed
 
-This fork is building real-time co-op for both games. The first experimental milestone adds
-two-player native network sessions, live partner health/position, and an automap partner
-marker. **It does not synchronise the game world yet.** See [the co-op setup and roadmap](docs/COOP.md).
+This fork adds experimental Windows **shared-world co-op**: UW1 has two visible,
+independent characters with their own inventories, equipment, stats, mana and spells.
+Quests, enemies and the world stay shared in the host's simulation, and campaign saves
+include both characters. The client receives its view and sound from the host. UW2
+still uses one party character. Full campaign progression needs broader playtesting;
+see [the co-op setup and verification status](docs/COOP.md).
+Windows users can build a portable package with separate `Host.exe` and `Client.exe`
+launchers: [Windows co-op launchers](docs/COOP.md#windows-launchers).
 
 **Ultima Underworld:** [![UW1 accuracy](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-accuracy.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-accuracy.yml) [![UW1 port](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-port.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw1-port.yml) [![UW1 release](https://img.shields.io/github/v/release/abedegno/underworld-exhumed?filter=uw1-*&include_prereleases&label=release)](https://github.com/abedegno/underworld-exhumed/releases)  
 **Ultima Underworld II:** [![UW2 accuracy](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-accuracy.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-accuracy.yml) [![UW2 port](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-port.yml/badge.svg?branch=main)](https://github.com/abedegno/underworld-exhumed/actions/workflows/uw2-port.yml) [![UW2 release](https://img.shields.io/github/v/release/abedegno/underworld-exhumed?filter=!uw1-*&label=release)](https://github.com/abedegno/underworld-exhumed/releases)  

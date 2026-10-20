@@ -83,6 +83,9 @@ int16 hilite_row;                       /* the row of the lit button */
    the highlight down, 0xA6 and 0x8D up, Enter presses the lit button, Escape closes. */
 void far run_options_panel(int show)
 {
+#ifndef __TURBOC__
+    port_shared_story(1);
+#endif
     int16 x, y;
     int input;
 
@@ -128,6 +131,9 @@ void far run_options_panel(int show)
             break;
         }
     } while (!gameopts_done);
+#ifndef __TURBOC__
+    port_shared_story(0);
+#endif
 }
 
 /* Draws picture pic of OPTBTNS.GR as the panel's background. */

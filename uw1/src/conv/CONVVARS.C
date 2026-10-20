@@ -77,7 +77,11 @@ void far setup_converse_data(struct Object far *npc)
     who = npc->whoami;
     val = who ? (who + 0x10) | STR_CONV : OBJ_ITEM(npc) | STR_OBJNAMES;
     bab_var("npc_name", &val, 1);
+#ifndef __TURBOC__
+    if (OBJ_GOAL(npc) == GOAL_ATTACK && port_shared_player_index(OBJ_GTARG(npc)))
+#else
     if (OBJ_GOAL(npc) == GOAL_ATTACK && OBJ_GTARG(npc) == 1)
+#endif
         val = 0;
     else if (OBJ_ALLY(npc))
         val = 6;

@@ -104,11 +104,14 @@ void far port_key_interact(int use)
     inplist->x = x - m3dx;              /* relative to the view, as pick_3d reads a click */
     inplist->y = y - (m3dy - m3dh);
     newPlObj = pick_3d(2);
+    if (getenv("UW_COOP_TEST_TRACE")) fprintf(stderr,"SHARED PICK seat=%d x=%d y=%d item=%d\n",port_shared_guest(),x,y,newPlObj ? newPlObj->id & 0x1FF : -1);
     if (newPlObj == 0) {                /* nothing but terrain: a look describes it */
         if (!use)
             look_nothing(2, pTxtId);
         return;
     }
+    if (port_shared_avatar(newPlObj)) { scroll_print("Your companion.\n"); return; }
+    if (getenv("UW_COOP_TEST_TRACE")) fprintf(stderr,"SHARED USE seat=%d item=%u\n",port_shared_guest(),newPlObj->id & 0x1FF);
     if (!use)
         player_3dlook();
     else if ((IsMobElem(newPlObj) && OBJ_MAJOR(newPlObj) == 1) || (newPlObj->id & 0x1FF) == 0x1CD)

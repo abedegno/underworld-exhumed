@@ -138,6 +138,16 @@ void far do_obj(struct Object far *o)
 
     if (o == ThePlayer)
         return;
+#ifndef __TURBOC__
+    if (port_shared_avatar(o)) {
+        int dx=(OBJ_HOMEX(o)-OBJ_HOMEX(ThePlayer))*8+OBJ_FINEX(o)-OBJ_FINEX(ThePlayer);
+        int dy=(OBJ_HOMEY(o)-OBJ_HOMEY(ThePlayer))*8+OBJ_FINEY(o)-OBJ_FINEY(ThePlayer);
+        /* Companions can pass through one another. The original sprite
+           projector assumes collisions keep a creature outside the camera. */
+        if (dx*dx+dy*dy<16 && abs((int)OBJ_Z(o)-(int)OBJ_Z(ThePlayer))<24)
+            return;
+    }
+#endif
     if (OBJ_INVIS(o) == 1)
         return;
     if (PickUp) {
@@ -188,6 +198,10 @@ void far do_obj(struct Object far *o)
     }
     else
         item = OBJ_ITEM(o);
+#ifndef __TURBOC__
+    item = port_shared_art(o, item);
+    if (port_shared_avatar(o)) type = 1;
+#endif
     switch (type) {
     case 2:
         item &= 0x3F;

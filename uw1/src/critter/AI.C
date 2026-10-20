@@ -68,6 +68,13 @@
 #include "sys.h"
 #include "ui.h"
 #include "view3d.h"
+#ifndef __TURBOC__
+#define COOP_PLAYER(index) port_shared_player_index(index)
+#define COOP_OTHER(index) (!port_shared_player_index(index))
+#else
+#define COOP_PLAYER(index) index == 1
+#define COOP_OTHER(index) index != 1
+#endif
 
 /* Declared in each file that uses it, its own way (no header). */
 extern struct Spell far spells[53];
@@ -356,7 +363,7 @@ void far crit_offense(void)
     dx = myxhome - myxpos;
     dy = myyhome - myypos;
     homedist = dx * dx + dy * dy;
-    if (OBJ_GTARG(meptr) == 1)
+    if (COOP_PLAYER(OBJ_GTARG(meptr)))
         SET_ATTITUDE(meptr, ATT_HOSTILE);
     if ((dist < 0x64 || myxpos == txpos && myypos == typos)
         && (abs((signed char)myzpos - tzpos) < 4 || mycst->flier))
@@ -695,6 +702,9 @@ unsigned char far crit_avoid_player(unsigned char heading, int how)
     register unsigned dist;
 
     plyr = Obj_IntTMem(1);
+#ifndef __TURBOC__
+    plyr = (struct Object *)port_shared_target(meptr,plyr);
+#endif
     px = (OBJ_HOMEX(plyr) << 3) + OBJ_FINEX(plyr);
     py = (OBJ_HOMEY(plyr) << 3) + OBJ_FINEY(plyr);
     dx = px - myxpost;
@@ -738,7 +748,7 @@ void far crit_talk(void)
     set_up_target();
     dist = tdx * tdx + tdy * tdy;
     found = target_found(&x, &y);
-    if (found != 1 && dist < 0x190) {
+    if (COOP_OTHER(found) && dist < 0x190) {
         head = deltatotheta(tdx, tdy);
         SET_SPEED(meptr, 0);
         SET_SEQ(meptr, SEQ_STAND);
@@ -747,11 +757,23 @@ void far crit_talk(void)
             SET_FRAME(meptr, (OBJ_FRAME(meptr) + 1) % 4);
         set_htx(head);
         if (dist < 0x90) {
+#ifndef __TURBOC__
+            /* The target can be the companion; use its facing and character for
+               the conversation, including item grants and experience. */
+            rel = OBJ_HEADING(mytarget) + 8 - head & 7;
+#else
             rel = OBJ_HEADING(ThePlayer) + 8 - head & 7;
+#endif
             if (rel >= 3 && rel <= 5) {
+#ifndef __TURBOC__
+                int previous = port_shared_context(Obj_MemTPtr(mytarget));
+#endif
                 pmouseHandled = 0;
                 mouse_freereign();
                 TalkTo(meptr);
+#ifndef __TURBOC__
+                port_shared_context_end(previous);
+#endif
             }
         }
     } else {
@@ -1067,6 +1089,9 @@ unsigned char far critter_ai(void)
     myxpos = OBJ_HOMEX(meptr);
     myypos = OBJ_HOMEY(meptr);
     plyr = Obj_IntTMem(1);
+#ifndef __TURBOC__
+    plyr = (struct Object *)port_shared_target(meptr,plyr);
+#endif
     px = OBJ_HOMEX(plyr);
     py = OBJ_HOMEY(plyr);
     eyedist = ((signed char)myxpos - lastXeye) * ((signed char)myxpos - lastXeye)
@@ -1134,7 +1159,11 @@ unsigned char far critter_ai(void)
         critter_mv();
     else if (OBJ_SEQ(meptr) == SEQ_DYING) {
         if (OBJ_FRAME(meptr) == 3) {
+#ifndef __TURBOC__
+            port_shared_death_check(meptr, 1);
+#else
             death_check(meptr, 1);
+#endif
             XP = OBJ_HOMEX(meptr);
             YP = OBJ_HOMEY(meptr);
             Obj_Rem(&Map_GetAddr(XP, YP)->objects, meptr);
@@ -1146,7 +1175,7 @@ unsigned char far critter_ai(void)
         } else
             SET_FRAME(meptr, OBJ_FRAME(meptr) + 1);
     } else if (OBJ_SEQ(meptr) >= SEQ_ATTACK1 && OBJ_SEQ(meptr) <= SEQ_ATTACK3) {
-        if (OBJ_FRAME(meptr) == 0 && OBJ_GTARG(meptr) == 1) {
+        if (OBJ_FRAME(meptr) == 0 && COOP_PLAYER(OBJ_GTARG(meptr))) {
             if (get_current_music() < MUSIC_FOE_HURT || get_current_music() > MUSIC_DANGER)
                 set_new_music(MUSIC_COMBAT);
             lastcombattime = GAME_TIME();
@@ -1235,14 +1264,14 @@ void far critter_mv(void)
         }
     }
     if (meptr->last_hit > 0
-        && (meptr->last_hit == 1 && !OBJ_ALLY(meptr) || OBJ_ALLY(meptr)
+        && (COOP_PLAYER(meptr->last_hit) && !OBJ_ALLY(meptr) || OBJ_ALLY(meptr)
             || OBJ_ALLY(Obj_IntTMem(meptr->last_hit)))) {
         if (meptr->last_hit != OBJ_GTARG(meptr))
             SET_GTARG(meptr, meptr->last_hit);
         if (!set_up_target())
             goto do_goal;
         targeted = 1;
-        if (meptr->last_hit == 1) {
+        if (COOP_PLAYER(meptr->last_hit)) {
             SET_ATTITUDE(meptr, ATT_HOSTILE);
             set_loc(OBJ_HOMEX(ThePlayer), OBJ_HOMEY(ThePlayer), OBJ_Z(ThePlayer) >> 3);
             SET_B19_0(meptr, 1);
@@ -1330,6 +1359,13 @@ do_goal:
 char far set_up_target(void)
 {
     mytarget = Obj_IntTMem(OBJ_GTARG(meptr));
+#ifndef __TURBOC__
+    mytarget = (struct Object *)port_shared_target(meptr, mytarget);
+    /* Some final-area mobiles have no goal target. A second camera can wake
+       them before a script assigns one; target zero is not a live avatar. */
+    if (port_shared_on() && mytarget == 0) return 0;
+    if (port_shared_avatar(mytarget)) SET_GTARG(meptr, Obj_MemTPtr(mytarget));
+#endif
     if (mytarget->hp <= 0)
         return 0;
     txpos = OBJ_HOMEX(mytarget);
@@ -1420,7 +1456,11 @@ void far critter_discard_goal(void)
    scripted death) refuses. Returns 1 if it is dying. */
 unsigned char far go_into_dying_sequence(struct Object far *obj)
 {
+#ifndef __TURBOC__
+    if (obj->whoami == 0 || port_shared_death_check(obj, 0)) {
+#else
     if (obj->whoami == 0 || death_check(obj, 0)) {
+#endif
         SET_SEQ(obj, SEQ_DYING);
         SET_FRAME(obj, 0);
         SET_RATE(obj, 4);
@@ -1466,6 +1506,12 @@ unsigned char far damage_critter(struct Object far *obj, unsigned char damage,
     register int ratio;
 
     minor = OBJ_MINOR(obj);
+#ifndef __TURBOC__
+    if (port_shared_avatar(obj)) {
+        if (!port_shared_friendly_source(from)) { SET_DAMAGE(obj, OBJ_DAMAGE(obj) + damage); obj->hp = obj->hp > damage ? obj->hp - damage : 0; }
+        return obj->hp == 0;
+    }
+#endif
     index = OBJ_INCLASS(obj);
     cr = &Creature[(minor << 4) + index];
     SET_DAMAGE(obj, OBJ_DAMAGE(obj) + damage);
@@ -1476,10 +1522,17 @@ unsigned char far damage_critter(struct Object far *obj, unsigned char damage,
     else {
         m = Obj_MemTPtr(from);
         who = m >= NUM_MOBILE ? 0 : m;
+#ifndef __TURBOC__
+        /* Preserve the attacking avatar index for individual experience. */
+#endif
     }
     if (who)
         obj->last_hit = who;
+#ifndef __TURBOC__
+    if (port_shared_player_index(who) && !OBJ_LONER(obj)) {
+#else
     if (who == 1 && !OBJ_LONER(obj)) {
+#endif
         typehit = cr->race;
         crithit = Obj_MemTPtr(obj);
         hitx = OBJ_HOMEX(obj);
@@ -1490,8 +1543,12 @@ unsigned char far damage_critter(struct Object far *obj, unsigned char damage,
     if (obj->hp <= damage) {
         obj->hp = 0;
         if (crit_die(obj)) {
+#ifndef __TURBOC__
+            if (port_shared_player_index(who)) port_shared_killed(who,obj);
+#else
             if (who == 1)
                 player_killed_a(obj);
+#endif
             return 1;
         }
     } else {

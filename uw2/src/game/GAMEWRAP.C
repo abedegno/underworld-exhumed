@@ -84,6 +84,9 @@ unsigned char far init_save(void)
    map, its automap (archive 4) and its creatures. PlayerLevel becomes level. */
 int far GetLevel(int level)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     int sq;
     int ok = 1;
     int flags = 2;
@@ -113,6 +116,9 @@ int far GetLevel(int level)
    inventory, which is freed and restored round it), the texture map and the automap. */
 char far SaveLevel(int level)
 {
+#ifndef __TURBOC__
+    port_shared_before_save();
+#endif
     char ok;
     char saved;
     int sq;

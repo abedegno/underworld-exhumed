@@ -394,7 +394,7 @@ def main(argv):
     elif sys.platform.startswith('linux') and any(f.startswith('-L' + LIBS) for f in pkg_config('--libs') + snd_libs):
         rpath = ['-Wl,-rpath,' + os.path.join(LIBS, 'lib')]     # runs without LD_LIBRARY_PATH
     libs = pkg_config('--libs') + snd_libs
-    if not a.web and portcheck.layout_flags(a.cc): libs += ['-lws2_32']  # co-op transport on Windows
+    if not a.web and portcheck.layout_flags(a.cc): libs += ['-lws2_32', '-Wl,--wrap=plat_audio_open']  # co-op transport/audio on Windows
     if a.web: return link_web(a.cc, objs, libs)
     if RELEASE and sys.platform.startswith('linux'): libs = strip_rpaths(libs)
     objs += windows_resource(a.cc)

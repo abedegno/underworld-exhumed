@@ -98,6 +98,7 @@ static int nshots, flips;
 
 void port_on_flip(void)
 {
+    if (port_shared_on()) port_shared_flip();
     static uint8_t pix[640 * 480];
     uint8_t pal[768];
     int i, w, h;
@@ -116,13 +117,16 @@ static char **game_argv;
 static int game(void *arg)
 {
     (void)arg;
-    if (port_coop_start()) return 2;
-    return uw2_main(game_argc, game_argv);
+    if (port_shared_on()) { if (port_shared_start()) return 2; }
+    else if (port_coop_start()) return 2;
+    int result=uw2_main(game_argc, game_argv);
+    port_shared_finished();return result;
 }
 
 static void on_lifecycle(int ev)
 {
     port_log("lifecycle event %d\n", ev);
+    if (port_shared_on() && ev==PLAT_QUIT_REQUEST) port_shared_quit();
 }
 
 /* --replay: the recording goes into the home directory as REPLAY.IN, where the game's own
@@ -200,10 +204,12 @@ static const char help_text[] =
     "  --enhance NAME[,NAME]  turn on changes the original game does not have, kept until\n"
     "                         changed; --enhance list lists them\n"
     "  --no-enhance NAME      turn one off\n"
-    "Experimental co-op presence (native only; docs/COOP.md):\n"
+    "Experimental co-op (native only; docs/COOP.md):\n"
     "  --coop-host PORT      host a two-player presence session on a TCP port\n"
     "  --coop-join IPV4:PORT  join a host; live partner health and automap marker\n"
     "                         worlds, combat, inventory and saves remain independent\n"
+    "  --coop-shared         host-owned world, two avatars and shared party inventory\n"
+    "                         the client receives its view/audio from the host\n"
     "Sound:\n"
     "  --sound MUSIC[,SPEECH] the sound cards, kept until changed (first run: 3,1, or 5,1\n"
     "                         when MT-32 ROMs are given or found):\n"
@@ -353,7 +359,8 @@ int main(int argc, char *argv[])
     port_trace = getenv("UW2PORT_TRACE") != NULL;
     for (i = 1; i < argc; i++) {
         const char *a = argv[i];
-        if (!strcmp(a, "--data") && i + 1 < argc) data = argv[++i];
+        if (!strcmp(a, "--coop-shared")) port_shared_enable();
+        else if (!strcmp(a, "--data") && i + 1 < argc) data = argv[++i];
         else if (!strcmp(a, "--home") && i + 1 < argc) home = argv[++i];
         else if ((!strcmp(a, "--coop-host") || !strcmp(a, "--coop-join")) && i + 1 < argc) {
             int role = !strcmp(a, "--coop-host") ? PORT_COOP_HOST : PORT_COOP_JOIN;
@@ -436,6 +443,13 @@ int main(int argc, char *argv[])
     if (home_dir(home)) {
         fprintf(stderr, "uw2port: cannot create the home directory %s (--home)\n", home);
         return 1;
+    }
+    if (port_shared_on() && !port_coop_enabled()) { fprintf(stderr, "--coop-shared needs --coop-host or --coop-join\n"); return 2; }
+    if (port_shared_on() && port_coop_role() == PORT_COOP_JOIN) {
+        port_home = home;
+        settings_init(home, port_settings, port_settings_count, "Underworld Shared World Client");
+        port_settings_seed(cfg.fullscreen, cfg.scale, cfg.aspect, cfg.integer_scale, cfg.mouse_lock);
+        return port_shared_client_run(&cfg);
     }
     if (!data && !(data = find_data(home, interactive, data_buf, sizeof data_buf))) return 1;
     if (plat_files_init(data, home)) {
@@ -531,10 +545,10 @@ int main(int argc, char *argv[])
     }
     vga_window_init();
     if (rp_request != 1 && rp_request != 2) rp_request = 0;   /* the port reads the world */
-    if (interactive && recording && rp_request == 0) port_blackbox_start(home);
+    if (interactive && recording && rp_request == 0 && !port_shared_on()) port_blackbox_start(home);
     if (replay && copy_to_home(replay, home, "REPLAY.IN")) return 1;
     if (sound && write_uw_cfg(sound)) return 1;
-    audio_config(wav, roms, audio_device && !cfg.hidden);
+    audio_config(wav, roms, audio_device && (!cfg.hidden || getenv("UW_COOP_TEST_AUDIO")));
     ail_set_logs(ail_log, hw_log);
     ail_set_slaved(rp_request == 2);    /* under replay AIL's timers follow the replayed clock */
     borland_init();
@@ -559,11 +573,12 @@ int main(int argc, char *argv[])
     port_settings_seed(cfg.fullscreen, cfg.scale, cfg.aspect, cfg.integer_scale, cfg.mouse_lock);
     pit_start();
     memset(&hooks, 0, sizeof hooks);
-    hooks.scanout = port_coop_enabled() ? port_coop_scanout : vga_scanout;
-    hooks.key = kbd_byte;
-    hooks.pointer = mouse_event;
+    hooks.scanout = port_shared_on() ? port_shared_scanout : port_coop_enabled() ? port_coop_scanout : vga_scanout;
+    hooks.key = port_shared_key;
+    hooks.pointer = port_shared_pointer;
     hooks.lifecycle = on_lifecycle;
     if (input_script) hooks.tick = inscript_tick;
+    if (port_shared_on()) {port_shared_config(&cfg);hooks.tick=port_shared_tick;}
     if (interactive) {
         port_home = home;
         hooks.drop = on_drop;

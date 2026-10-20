@@ -778,6 +778,10 @@ void far runcutscene(register unsigned n)
     int y;
     int w;
     register int h;
+#ifndef __TURBOC__
+    port_shared_story(1);
+    if (getenv("UW_COOP_TEST_TRACE")) fprintf(stderr, "SHARED SCENE %u begin guest=%d\n", n, port_shared_guest());
+#endif
     if (n < 0x100) {
         x = 0;
         y = 0xC7;
@@ -808,6 +812,10 @@ void far runcutscene(register unsigned n)
         }
     } else editchng(2);
     mouse_show();
+#ifndef __TURBOC__
+    if (getenv("UW_COOP_TEST_TRACE")) fprintf(stderr, "SHARED SCENE %u completed\n", n);
+    port_shared_story(0);
+#endif
 }
 
 /* 0x14E3, at start-up (UWEDIT.C): the frame buffer is TMPALLOC.C's conventional

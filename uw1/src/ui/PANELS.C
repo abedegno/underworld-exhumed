@@ -321,6 +321,15 @@ void far set_screen_frame(char which, int val)
         goal[SCR_WEAPON] = val;
         break;
     case SCR_PANEL:
+#ifndef __TURBOC__
+        if (port_shared_on()) {
+            RightPanel = setting[SCR_PANEL] = goal[SCR_PANEL] = val;
+            slow_adjust &= ~(1 << SCR_PANEL);
+            pretty_panelagain();
+            editchng(2);
+            break;
+        }
+#endif
         if (RightPanel == PANEL_TURNING)
             break;
     default:
@@ -342,6 +351,12 @@ void far update_screen(void)
     register int i;
     register int bit;
 
+#ifndef __TURBOC__
+    /* The host and client animate in the same engine tick. Each view must
+       consume that tick for its own weapon, flasks and panel state. */
+    static unsigned char shared_time[2];
+    old_time = shared_time[port_shared_guest()];
+#endif
     now = GAME_TIME() & 0xFF;
     did = 0;
     if (now_adjust) {
@@ -377,6 +392,9 @@ void far update_screen(void)
         update_sprites();
         old_time = now;
     }
+#ifndef __TURBOC__
+    shared_time[port_shared_guest()] = old_time;
+#endif
 }
 
 /* Moves flask which one step towards its goal (filling or draining) and animates its
@@ -798,7 +816,13 @@ void far jiggle_weapon(int how)
    pictures are loaded while sheathed. */
 void far adjust_weapon(void)
 {
+#ifdef __TURBOC__
     static char swung = 0;
+#else
+    static char shared_swung[2];
+    char *seat_swung = &shared_swung[port_shared_guest()];
+#define swung (*seat_swung)
+#endif
 
     editchng(2);
     if (goal[SCR_WEAPON] > WEAP_SHEATHED)
@@ -873,6 +897,9 @@ void far adjust_weapon(void)
         break;
     }
 }
+#ifndef __TURBOC__
+#undef swung
+#endif
 
 /* Reads the weapon's colour map for the player's skin (DATA\weapons.cm, 16 bytes, the
    second set for body type 1). */
@@ -1310,3 +1337,33 @@ void far player_look_grave(int grave)
     if (grave)
         value_cuts(0x101, grave);
 }
+
+#ifndef __TURBOC__
+/* Native co-op switches the persistent weapon animation and panel clocks.
+   last_weap describes the art actually loaded, so it remains a global cache. */
+void port_shared_panel_state(int which,int save)
+{
+    static struct {
+        unsigned char setting[9],goal[9],panel;
+        int16 slow,fast,now,frame,xo,fo;
+        char weapon,state;
+    } seats[2];
+    static int initialized;
+    if(which<0){memset(&seats[1],0,sizeof seats[1]);seats[1].weapon=-1;seats[1].frame=-1;seats[1].fo=1;
+        seats[1].setting[SCR_WEAPON]=seats[1].goal[SCR_WEAPON]=seats[1].state=WEAP_SHEATHED;return;}
+#define FIELD(member,global) do{if(save)seats[which].member=global;else global=seats[which].member;}while(0)
+    if(!initialized){seats[1].weapon=-1;seats[1].frame=-1;seats[1].fo=1;initialized=1;}
+    if(save){memcpy(seats[which].setting,setting,9);memcpy(seats[which].goal,goal,9);}
+    else{memcpy(setting,seats[which].setting,9);memcpy(goal,seats[which].goal,9);}
+    FIELD(slow,slow_adjust);FIELD(fast,fast_adjust);FIELD(now,now_adjust);
+    FIELD(frame,weap_frame);FIELD(xo,wxo);FIELD(fo,wfo);FIELD(weapon,weapid);FIELD(state,wlstate);FIELD(panel,RightPanel);
+    if(!save) {
+        static int hand=-1;
+        if(hand!=player->lefty){last_weap=-1;hand=player->lefty;}
+        /* Keep the global art cache in this character's weapon and hand before
+           adjust_weapon compares it, preserving the independent swing frame. */
+        do_weapload();
+    }
+#undef FIELD
+}
+#endif

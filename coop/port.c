@@ -12,6 +12,8 @@
 
 static enum coop_role requested_role;
 static const char *requested_endpoint;
+int port_coop_role(void) { return requested_role; }
+const char *port_coop_endpoint(void) { return requested_endpoint; }
 static struct coop_session session;
 static int shown_map_level;
 static pthread_mutex_t view_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -118,6 +120,18 @@ static void label(uint8_t *pixels, int w, int h, const char *text, uint8_t color
         for (row = 0; row < 5; row++) for (col = 0; col < 3; col++)
             if (bits & (1u << (14 - row * 3 - col))) dot(pixels, w, h, x + col, 1 + row, color);
     }
+}
+
+void port_coop_banner(unsigned char *pixels,int w,int h,unsigned char rgb6[768],const char *text)
+{
+    int i,light=0,dark=0,brightest=-1,darkest=1000;
+    for(i=0;i<256;i++) {
+        int sum=rgb6[i*3]+rgb6[i*3+1]+rgb6[i*3+2];
+        if(sum>brightest){brightest=sum;light=i;}
+        if(sum<darkest){darkest=sum;dark=i;}
+    }
+    if(!brightest){light=255;rgb6[765]=rgb6[766]=rgb6[767]=63;}
+    if(h>=7){memset(pixels,dark,(size_t)w*7);label(pixels,w,h,text,(uint8_t)light);}
 }
 
 void port_coop_scanout(unsigned char *pixels, int *w, int *h, unsigned char rgb6[768])

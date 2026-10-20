@@ -165,6 +165,9 @@ char far do_spell(unsigned char cls, unsigned char sub, struct Object far *who,
 
 /* Restores the player's mana: amount > 0 gives max_mana * (amount + 0..3) / 16 + 1, a
    negative amount adds -amount. Capped at max_mana. */
+#ifndef __TURBOC__
+#define restore_mana shared_restore_mana
+#endif
 void far restore_mana(struct Object far *who, char amount)
 {
     register int gain;
@@ -181,8 +184,20 @@ void far restore_mana(struct Object far *who, char amount)
     }
 }
 
+#ifndef __TURBOC__
+#undef restore_mana
+void far restore_mana(struct Object far *who,char amount)
+{
+    int old=port_shared_context(who ? Obj_MemTPtr(who) : 0);
+    shared_restore_mana(who,amount);port_shared_context_end(old);
+}
+#endif
+
 /* Heals the player like restore_mana: amount > 0 gives avghit * (amount + 0..3) / 16 + 1,
    a negative amount adds -amount, capped at the player's maximum (playerdat->avghit). */
+#ifndef __TURBOC__
+#define restore_hp shared_restore_hp
+#endif
 void far restore_hp(struct Object far *who, char amount)
 {
     int hp;
@@ -202,8 +217,20 @@ void far restore_hp(struct Object far *who, char amount)
     }
 }
 
+#ifndef __TURBOC__
+#undef restore_hp
+void far restore_hp(struct Object far *who,char amount)
+{
+    int old=port_shared_context(who ? Obj_MemTPtr(who) : 0);
+    shared_restore_hp(who,amount);port_shared_context_end(old);
+}
+#endif
+
 /* Adds amount hit points to a critter, capped at its Creature avghit (the player's
    record too). */
+#ifndef __TURBOC__
+#define get_hp_back shared_get_hp_back
+#endif
 void far get_hp_back(struct Object far *who, unsigned char amount)
 {
     who->hp = who->hp + amount > Creature[OBJ_INMAJOR(who)].avghit
@@ -211,6 +238,15 @@ void far get_hp_back(struct Object far *who, unsigned char amount)
     if (who == ThePlayer)
         panel_check_hpmp();
 }
+
+#ifndef __TURBOC__
+#undef get_hp_back
+void far get_hp_back(struct Object far *who,unsigned char amount)
+{
+    int old=port_shared_context(who ? Obj_MemTPtr(who) : 0);
+    shared_get_hp_back(who,amount);port_shared_context_end(old);
+}
+#endif
 
 /* The heal spells (class 4): minor d8 hit points, and minor 15 all of them. */
 void far healing(struct Object far *who, char sub)

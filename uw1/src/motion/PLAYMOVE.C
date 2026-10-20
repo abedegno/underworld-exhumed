@@ -102,6 +102,22 @@ unsigned char water_eff = 0xFF;
 uint32 watertime = 0;                   /* *Time when make_noise last started water_eff */
 static unsigned char noise_count = 0;
 
+#ifndef __TURBOC__
+/* These clocks and effects describe one character, not the shared world tick. */
+void port_shared_movement_state(int which,int save)
+{
+    static struct {
+        uint32 next,water_time;
+        unsigned char phase,foot,water,noise,combat,tremor;
+    } seats[2]={{.water=0xFF},{.water=0xFF}};
+    if(which<0){memset(&seats[1],0,sizeof seats[1]);seats[1].water=0xFF;return;}
+#define FIELD(member,global) do{if(save)seats[which].member=global;else global=seats[which].member;}while(0)
+    FIELD(next,nextstep);FIELD(water_time,watertime);FIELD(phase,tsteps);FIELD(foot,step_foot);
+    FIELD(water,water_eff);FIELD(noise,noise_count);FIELD(combat,combEfflen);FIELD(tremor,tremEfflen);
+#undef FIELD
+}
+#endif
+
 /* This file's _BSS, in UW1 DS:3578..3599 (UW2 DS:33C6..33E7). All
    FM Towns names. campos and camang are the camera when it is not on an object (UsPtr 0);
    the vort_ variables are the moongate vortex's spinning camera. */
@@ -326,6 +342,10 @@ void far check_physics(void)
     uint32 delta;
     unsigned char frames;
 
+#ifndef __TURBOC__
+    if (port_shared_guest()) { port_shared_guest_physics(); return; }
+#endif
+
     delta = GAME_TIME() - last_time;
     if (delta > 0x40)
     {
@@ -369,7 +389,11 @@ void far move_physics(int incr, int frames, unsigned char easy)
     if ((PlayerInput != PIN_NONE || PN.speed != 0 || PN.vel[2] != 0 || PN.acc[2] != 0 || PN.acc[1] != 0
          || PN.acc[0] != 0 || fiz_update) && !(char)easy)    /* UW1: cbw */
         move_player(incr);
+#ifndef __TURBOC__
+    if (MoveCrits && !port_shared_world_time_stop() && frames != 0)
+#else
     if (MoveCrits && !(char)TimeStop && frames != 0)     /* UW1: cbw */
+#endif
         move_mobile(frames);
     if (player->motion_state)
         parse_effect();

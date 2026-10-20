@@ -100,6 +100,9 @@ char far init_save(void)
    aside meanwhile, then its texture map, its automap and its creatures. */
 int far GetLevel(register int level)
 {
+#ifndef __TURBOC__
+    port_shared_reset();
+#endif
     register int ok = 1;
     struct Arc arc;
 
@@ -126,6 +129,9 @@ int far GetLevel(register int level)
    inventory, which is freed and restored round it), the texture map and the automap. */
 char far SaveLevel(register int level)
 {
+#ifndef __TURBOC__
+    port_shared_before_save();
+#endif
     char ok;
     struct Arc arc;
 
@@ -239,6 +245,10 @@ char far RestoreGame(char slot)
     char path[30];
     register char *p;
 
+#ifndef __TURBOC__
+    if (port_shared_guest()) return 0;
+#endif
+
     strcpy(path, HomeDir);
     p = strchr(path, '0');
     *p = slot + '0';
@@ -254,6 +264,9 @@ char far RestoreGame(char slot)
                     do_level_hacks(PlayerLevel, 3);
                     game_sprint(0xAA);
                     set_creatures_from_saved_game();
+#ifndef __TURBOC__
+                    port_shared_campaign_load();
+#endif
                     return 1;
                 }
             }
@@ -271,6 +284,10 @@ char far SaveGame(char slot, register char *desc)
 {
     char path[30];
     register char *p;
+
+#ifndef __TURBOC__
+    if (port_shared_guest()) return 0;
+#endif
 
     set_creatures_to_saved_game();
     strcpy(path, HomeDir);
@@ -433,6 +450,9 @@ char far ChangeLevel(int from, int to)
      byte level 7 keeps the maximum mana in. */
 void far do_level_hacks(int level, register int mode)
 {
+#ifndef __TURBOC__
+    port_shared_level_hacks(level,mode);
+#endif
     if (player->armageddon && mode == 0) {
         clearobj(0);
         return;

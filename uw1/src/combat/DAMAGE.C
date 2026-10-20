@@ -184,6 +184,9 @@ unsigned char far check_res(struct Object far *obj, unsigned char damage, unsign
 /* The entry point for damaging any object: resistances first, then critters go to
    damage_critter (AI.C) and other objects to damage_object, which removes them through
    remove_object once they are destroyed. Returns nonzero when the object is gone. */
+#ifndef __TURBOC__
+#define damage_item shared_damage_item
+#endif
 char far damage_item(struct Object far *obj, struct Object far *who, int x, int y,
                      unsigned char damage, unsigned char type)
 {
@@ -194,6 +197,17 @@ char far damage_item(struct Object far *obj, struct Object far *who, int x, int 
         return remove_object(obj, who, type, x, y);
     return 0;
 }
+
+#ifndef __TURBOC__
+#undef damage_item
+char far damage_item(struct Object far *obj,struct Object far *who,int x,int y,
+                     unsigned char damage,unsigned char type)
+{
+    int old=port_shared_context(Obj_MemTPtr(obj));
+    char result=shared_damage_item(obj,who,x,y,damage,type);
+    port_shared_context_end(old);return result;
+}
+#endif
 
 /* Takes damage off an object that is not a critter and returns 1 when it is destroyed.
    ComObjData's qualclass is the object's toughness: damage is shifted right by it, and

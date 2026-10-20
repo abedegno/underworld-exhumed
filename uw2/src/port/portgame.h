@@ -11,6 +11,7 @@
    never shipped. The load segment and the far heap are the runtime's defaults. */
 #ifndef UW2_PORTGAME_H
 #define UW2_PORTGAME_H
+#include "../../../../coop/shared_port.h"
 
 #define PORT_NAME "uw2port"
 #define PORT_GAME_MAIN uw2_main                 /* UWEDIT.C's main (compat.h) */

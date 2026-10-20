@@ -346,7 +346,11 @@ void far player_setup(register int x, register int y)
     PN.x = (x << 8) + 0x80;
     PN.y = (y << 8) + 0x80;
     PN.b24 = 8;
+#ifndef __TURBOC__
+    PN.index = port_shared_on() ? Obj_MemTPtr(ThePlayer) : 1;
+#else
     PN.index = 1;
+#endif
     GrSq = x + (y << 6);
     PN.z = hgt_val[mapdata[GrSq].height];
     if (tile_walls[mapdata[GrSq].type] & 0x20)

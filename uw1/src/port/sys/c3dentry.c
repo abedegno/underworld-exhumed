@@ -73,7 +73,7 @@ static uint32_t first_tick, last_tick;
    could since it began; UW2's paced from rc8. */
 void cRender(void)
 {
-    port_pace_frame((volatile uint32_t *)Time);
+    if (!port_shared_guest()) port_pace_frame((volatile uint32_t *)Time);
     if (!frames++) first_tick = *Time;
     else if (*Time - last_tick < PORT_FRAME_TICKS) short_frames++;
     last_tick = *Time;
