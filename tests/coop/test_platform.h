@@ -44,6 +44,7 @@ static inline void test_timeout(test_socket fd)
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <time.h>
 typedef int test_socket;
 typedef socklen_t test_socklen;

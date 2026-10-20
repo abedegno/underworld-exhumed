@@ -57,7 +57,9 @@ static unsigned free_port(void)
     struct sockaddr_in addr;
     test_socklen n = sizeof addr;
     assert(test_valid(fd));
-    memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET; addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    memset(&addr, 0, sizeof addr); addr.sin_family = AF_INET;
+    /* INADDR_LOOPBACK is not exposed by strict POSIX headers on macOS. */
+    assert(inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) == 1);
     assert(!bind(fd, (struct sockaddr *)&addr, sizeof addr));
     assert(!getsockname(fd, (struct sockaddr *)&addr, &n)); test_close(fd);
     return ntohs(addr.sin_port);
@@ -96,6 +98,7 @@ static void presence(int game)
 {
     struct coop_session h, c, third, duplicate;
     struct coop_pose inactive = {0};
+    int i;
     char port[8]; unsigned p = host(&h, game);
     snprintf(port, sizeof port, "%u", p);
     assert(coop_open(&duplicate, COOP_HOST, (uint8_t)game, port));
@@ -105,9 +108,14 @@ static void presence(int game)
     assert(h.have_remote && c.have_remote && h.remote.x == pose2.x && c.remote.x == pose1.x);
     join(&third, game, p); pump(&h, &third, 20); pump(&h, &c, 20);
     assert(h.remote.x == pose2.x); coop_close(&third);
-    now += 100; coop_tick(&c, &inactive, now); pump(&h, &c, 1);
+    /* Keep sending the inactive pose while waiting for TCP delivery. A single
+       host tick can still see the previous pose, especially on macOS. */
+    for (i = 0; i < 100 && (!h.have_remote || h.remote.active); i++) {
+        now += 10; coop_tick(&c, &inactive, now); coop_tick(&h, &pose1, now); pause_briefly();
+    }
     assert(h.have_remote && !h.remote.active); /* menus/death remove the marker */
-    coop_close(&c); coop_tick(&h, &pose1, ++now);
+    coop_close(&c);
+    for (i = 0; i < 100 && h.peer != -1; i++) { coop_tick(&h, &pose1, ++now); pause_briefly(); }
     assert(h.status == COOP_WAITING && !h.have_remote);
     join(&c, game, p); pump(&h, &c, 100);
     assert(h.have_remote && c.have_remote); /* new connection resets sequence */
@@ -131,6 +139,7 @@ static void host_restart(void)
 {
     struct coop_session h, c;
     unsigned p = free_port();
+    int i;
     char port[8]; snprintf(port, sizeof port, "%u", p);
     join(&c, 1, p);
     /* Joining before the host exists stays nonblocking and retries. */
@@ -139,7 +148,8 @@ static void host_restart(void)
     assert(!coop_open(&h, COOP_HOST, 1, port)); pump(&h, &c, 200);
     assert(h.have_remote && c.have_remote);
     coop_close(&h);
-    coop_tick(&c, &pose2, ++now); assert(!c.have_remote);
+    for (i = 0; i < 100 && c.peer != -1; i++) { coop_tick(&c, &pose2, ++now); pause_briefly(); }
+    assert(!c.have_remote);
     assert(!coop_open(&h, COOP_HOST, 1, port)); pump(&h, &c, 200);
     assert(h.have_remote && c.have_remote);
     coop_close(&h); coop_close(&c);
@@ -149,7 +159,8 @@ static test_socket raw_peer(unsigned port)
     test_socket fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in a;
     assert(test_valid(fd)); memset(&a, 0, sizeof a);
-    a.sin_family = AF_INET; a.sin_addr.s_addr = htonl(INADDR_LOOPBACK); a.sin_port = htons((uint16_t)port);
+    a.sin_family = AF_INET; a.sin_port = htons((uint16_t)port);
+    assert(inet_pton(AF_INET, "127.0.0.1", &a.sin_addr) == 1);
     test_timeout(fd);
     assert(!connect(fd, (struct sockaddr *)&a, sizeof a)); return fd;
 }

@@ -19,7 +19,8 @@ static void message(int type,const unsigned char *data,size_t size,void *context
 static unsigned free_port(void)
 {
     test_socket fd=socket(AF_INET,SOCK_STREAM,0);struct sockaddr_in a;test_socklen size=sizeof a;
-    assert(test_valid(fd));memset(&a,0,sizeof a);a.sin_family=AF_INET;a.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+    assert(test_valid(fd));memset(&a,0,sizeof a);a.sin_family=AF_INET;
+    assert(inet_pton(AF_INET,"127.0.0.1",&a.sin_addr)==1);
     assert(!bind(fd,(struct sockaddr*)&a,sizeof a));assert(!getsockname(fd,(struct sockaddr*)&a,&size));
     test_close(fd);return ntohs(a.sin_port);
 }
