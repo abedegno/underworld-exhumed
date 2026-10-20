@@ -90,7 +90,7 @@ Each game folder (`uw1/`, `uw2/`) is self-contained: its sources, maps, tests an
 | --- | --- | --- |
 | Code matched | every code segment: 89 C files and 50 assembly modules | every code segment: 99 C files and the assembly |
 | Exact link | identical to `UW.EXE` | identical to `UW2.EXE` |
-| Port | ten recorded sessions identical to DOS on macOS, Linux and Windows, and the web build's under Node.js | ten recorded sessions identical to DOS on macOS, Linux and Windows, and the web build's under Node.js |
+| Port | eleven recorded sessions identical to DOS on macOS, Linux and Windows, and the web build's under Node.js | twelve recorded sessions identical to DOS on macOS, Linux and Windows, and the web build's under Node.js |
 | Releases | 1.0.1, published | 1.2.2, published |
 | In a browser | [the web page](https://abedegno.github.io/underworld-exhumed-web/) | [the web page](https://abedegno.github.io/underworld-exhumed-web/) |
 

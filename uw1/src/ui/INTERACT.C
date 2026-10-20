@@ -463,6 +463,13 @@ void far player_3dget(void)
             if (split && split != newPlObj) {
                 newPlObj->ol.f.link += split->ol.f.link;
                 Obj_Rem(&newPlObj->qn.link, split);
+#ifndef __TURBOC__
+                /* port only: --enhance tidy-objects frees the split copy, as UW2 does; the
+                   original leaves it on no list and off the free stack (OBJECTS.C's
+                   tidy_objects puts back the ones already lost) */
+                if (ENHANCED(ENH_TIDY_OBJECTS))
+                    Obj_Free(split);
+#endif
             }
             game_sprint(0x5F);
         } else {

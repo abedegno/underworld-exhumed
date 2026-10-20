@@ -39,6 +39,29 @@
 #include "sys.h"
 #include "ui.h"
 
+#ifndef __TURBOC__
+/* Port only (docs/PORT.md, "Host hazards"; UW1's issue 7): a note's text into a 50-byte buffer
+   as str_copy copies it, but at most 49 characters and the 0. The game ends every note it
+   writes within its 50 bytes (ManageDungeonMap takes at most 46 characters), and UW2's LEV.ARK
+   has a length table, so the aliased block that gave UW1 an unended note cannot happen here;
+   but a notes block the game did not write (a damaged or edited save) can hold one, and
+   str_copy would write past the buffer, where DOS returns into low memory and the host's frame
+   decides what the extra bytes hit. A note that ends in its 50 bytes is copied by str_copy, as
+   DOS copies it. */
+static char far *note_copy(char *dst, char far *src)
+{
+    int i;
+    for (i = 0; i < 0x32; i++)
+        if (src[i] == 0) return str_copy(dst, src);
+    for (i = 0; i < 0x31; i++) dst[i] = src[i];
+    dst[0x31] = 0;
+    return dst;
+}
+#define NOTE_COPY(dst, src) note_copy(dst, src)
+#else
+#define NOTE_COPY(dst, src) str_copy(dst, src)
+#endif
+
 /* Initialised data, DS:09EE. */
 /* name: none of it has an FM Towns name, so it was static. */
 
@@ -451,11 +474,11 @@ struct ATM far * far DetermineBetterHit(struct ATM far *a, struct ATM far *b, in
         return b;
     if (b == 0)
         return a;
-    str_copy(buf, a->text);
+    NOTE_COPY(buf, a->text);
     w = string_width(buf);
     ax = abs(a->x + w / 2 - x);
     ay = abs(a->y - 2 - y);
-    str_copy(buf, b->text);
+    NOTE_COPY(buf, b->text);
     w = string_width(buf);
     bx = abs(b->x + w / 2 - x);
     by = abs(b->y - 2 - y);
@@ -612,7 +635,7 @@ void far ManageDungeonMap(void)
             my -= 5;
             for (i = 0; i < num_words; i++) {
                 note = &ATM_Strings[i];
-                str_copy(text, note->text);
+                NOTE_COPY(text, note->text);
                 w = string_width(text);
                 if (note->x <= mx && note->x + w >= mx && note->y - 5 <= my && note->y >= my) {
                     best = DetermineBetterHit(best, note, mx, my);
@@ -622,7 +645,7 @@ void far ManageDungeonMap(void)
             }
             if (best) {
                 notes_dirty = 1;
-                str_copy(text, best->text);
+                NOTE_COPY(text, best->text);
                 w = string_width(text);
                 set_the_color(0x106);
                 rectangle(best->x, best->y, best->x + w, best->y - 5);
@@ -663,9 +686,9 @@ void far RedisplayStrings(void)
     *foreground_color = 0x4E;
     *background_color = 0x4E;
     for (i = 0; i < num_words; i++) {
-        str_copy(buf, ATM_Strings[i].text);
+        NOTE_COPY(buf, ATM_Strings[i].text);
         if (ATM_Strings[i].x >= 0) {
-            str_copy(buf, ATM_Strings[i].text);
+            NOTE_COPY(buf, ATM_Strings[i].text);
             string_to_screen(buf, ATM_Strings[i].x, ATM_Strings[i].y);
         }
     }

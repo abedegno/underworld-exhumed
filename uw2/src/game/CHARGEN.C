@@ -60,7 +60,8 @@ HOST_LAYOUT_END
 /* match: laid out by name: sknow 43, chroff 275, chrbuf 395. */
 /* name: FM Towns keeps the three together too. */
 int16 sknow;
-int16 *chroff;                          /* offsets of the button pictures in chrbuf */
+uint16 *chroff;                         /* offsets of the button pictures in chrbuf: unsigned, as
+                                           the female bodies start past 7FFFh (issue 8) */
 unsigned char far *chrbuf;
 
 
@@ -703,7 +704,7 @@ char far strt_chargen(void)
     struct ChrOpt far *opts;
     unsigned char result;
     unsigned char ok;
-    int16 offs[28];
+    uint16 offs[28];
     register int i;
     register int fd;
 

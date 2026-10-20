@@ -233,8 +233,12 @@ unsigned char far space_to_motion(char pos, char check)
         MP.step[MP.major] = 0xE000;
     if (MP.vel[MP.major] != 0) {
         MP.step[MP.minor] = MP.step[MP.major] / 0x100 * MP.vel[MP.minor] / MP.vel[MP.major] << 8;
-        t = MP.vel[MP.major] * CP->time;
-        MP.steps = abs(t) >> 13;
+        /* a 16-bit int multiply, as Turbo C's (imul, then cwd): it wraps when the mover is fast
+           and the step long, as the first step after a restore is (check_physics caps it at 40h
+           units, and a restore keeps the player's speed). On the host it kept 32 bits (UW1's
+           issue 10). abs is the low word's too, so abs(-8000h) is -8000h */
+        t = (int16)(MP.vel[MP.major] * CP->time);
+        MP.steps = (int16)abs(t) >> 13;
         MP.rem = abs(t) & 0x1FFF;
         MP.dt = abs(0x2000 / MP.vel[MP.major]);
     } else {
@@ -265,11 +269,13 @@ unsigned char far space_to_motion(char pos, char check)
             a = a / b;
             if (a > 0x7FFF || a < -0x8000L) {
                 MP.rem = 0;
-                MP.zspeed = abs((MP.vel[2] >> 1) * CP->time >> 5);
+                MP.zspeed = abs((int16)((MP.vel[2] >> 1) * CP->time) >> 5);    /* 16-bit, as below */
             } else
                 MP.zspeed = a;
         } else
-            MP.zspeed = abs((MP.vel[2] >> 1) * CP->time >> 5);
+            /* the product is a 16-bit int (imul, then sar ax,5), which wraps once the fall is
+               fast and the step long */
+            MP.zspeed = abs((int16)((MP.vel[2] >> 1) * CP->time) >> 5);
     } else
         MP.step[2] = 0;
     return 1;
@@ -504,8 +510,10 @@ void far do_zbounce(void)
     hit_obj = 0;
     mass = ComObjData[OBJ_ITEM(Obj_IntTMem(Ppd.index))].mass;
     if (MP.zspeed > 4) {
-        dz = abs(MP.pos[2] - MP.targz) * MP.dt;
-        dz = (dz << 4) / (MP.zspeed / 4);
+        /* 16-bit ints, as Turbo C's (imul, then shl ax,4 and cwd before the idiv): both the
+           product and the shift wrap where the host's int kept 32 bits */
+        dz = (int16)(abs(MP.pos[2] - MP.targz) * MP.dt);
+        dz = (int16)(dz << 4) / (MP.zspeed / 4);
         CP->time -= dz;
     } else
         CP->time = 0;
@@ -608,10 +616,13 @@ unsigned char far full_move(int crossed, int dir)
     register int dz;
 
     if (MP.steps + (dir == -1) > MP.done) {
+        /* 16-bit ints, as Turbo C's (shl ax,5, and neg, before the cwd): zspeed passes 1024
+           when the fall is fast and the major axis slow, and then z wraps and the whole step
+           goes the wrong way, where the host's int kept 32 bits */
         if (dir * MP.step[2] > 0)
-            z = MP.zspeed << 5;
+            z = (int16)(MP.zspeed << 5);
         else
-            z = -(MP.zspeed << 5);
+            z = (int16)-(MP.zspeed << 5);
     } else if (MP.rem != 0) {
         z = MP.rem;
         z = z * (dir * (MP.step[2] / 0x800) * MP.zspeed);

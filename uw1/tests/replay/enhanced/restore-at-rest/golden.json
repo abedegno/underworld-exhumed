@@ -1,0 +1,34 @@
+{
+ "format": 1,
+ "session": "restore-at-rest",
+ "made_by": "port",
+ "note": "made by the port, not DOS: a regression baseline for an enhancement DOS does not have",
+ "enhancements": [
+  "skip-intro",
+  "restore-at-rest"
+ ],
+ "recording": {
+  "path": "tests/replay/enhanced/restore-at-rest/session.rec",
+  "sha256": "74a2f8657e4e5a1e6c1767a723da1ce5d997b851ddabddef773703a7c97dbdfe"
+ },
+ "checkpoints": [
+  {"ck":[1,1,1,0],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"9beb49d3cbb37d25","GFX":"65553ae13d465e15","PAL":"563d54ecf695bde1","CRTC":"b7a81f2b97e7f8a3","VGA":"afba826fc8f2ea41"}},
+  {"ck":[3,32768,3,0],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"1497182f8b79238d","GFX":"65553ae13d465e15","PAL":"563d54ecf695bde1","CRTC":"b7a81f2b97e7f8a3","VGA":"afba826fc8f2ea41"}},
+  {"ck":[1,2,5,0],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"56f7a81db4abd91e","GFX":"65553ae13d465e15","PAL":"563d54ecf695bde1","CRTC":"b7a81f2b97e7f8a3","VGA":"afba826fc8f2ea41"}},
+  {"ck":[3,7181,942392,769],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"95fa044ed680281d","GFX":"b8046c1a65f9b2ed","PAL":"7a6df478d31a62fc","CRTC":"b7a81f2b97e7f8a3","VGA":"eb6cbd3b935d45ac"}},
+  {"ck":[2,0,1314582,1024],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"60ea3c7685522e78"}},
+  {"ck":[3,7181,1497190,1148],"secs":{"PLYR":"c538c83f9e14ddbb","RAND":"8bd8c013246aa84c","CNTS":"99237f4b9a89f995","GFX":"bdefdeb98f52fb78","PAL":"c8325e4fae58233c","CRTC":"b7a81f2b97e7f8a3","VGA":"fcb1edf4c61d155c"}},
+  {"ck":[1,3,1497192,1148],"secs":{"PLYR":"5b301d55674aea50","RAND":"8bd8c013246aa84c","LEVL":"9ad2163931dd8a83","CNTS":"f8f8652a6f279ac4","GFX":"6440961ce436ea78","PAL":"c8325e4fae58233c","CRTC":"b7a81f2b97e7f8a3","VGA":"9adc9c23f8cbf71b"}},
+  {"ck":[1,4,1547061,1311],"secs":{"PLYR":"5b301d55674aea50","RAND":"8bd8c013246aa84c","LEVL":"9ad2163931dd8a83","CNTS":"6ab331c756225766","GFX":"5b2fa46ab0ba24e5","PAL":"2e404218780e5666","CRTC":"5820c1822f777b43","VGA":"a0f92a1c626de6e3"}},
+  {"ck":[1,5,1596781,1479],"secs":{"PLYR":"5b301d55674aea50","RAND":"8bd8c013246aa84c","LEVL":"9ad2163931dd8a83","CNTS":"cf9395de8b0318cf","GFX":"1128f1078f9381bb","PAL":"563d54ecf695bde1","CRTC":"5820c1822f777b43","VGA":"cd319f647e3028e6"}},
+  {"ck":[2,0,1925236,2048],"secs":{"PLYR":"7fcfe932a3bdd0ed","RAND":"639a5555c0cb77ab","LEVL":"12c4c19ad46088a0","CNTS":"d06f58e9f6fd0d79"}},
+  {"ck":[3,4471,2241418,2569],"secs":{"PLYR":"122b1462c36999a1","RAND":"68c573e34b2fb8d9","LEVL":"c935be50fdfaafd8","CNTS":"22127dd602116fb0","GFX":"2030ef3784f84fff","PAL":"f2f653dedd8f4e23","CRTC":"5820c1822f777b43","VGA":"0ec5ba40896c432d"}},
+  {"ck":[3,7424,2242974,2842],"secs":{"PLYR":"fbc4e38ce9bb39c5","RAND":"4aee120ef926406c","LEVL":"07a7d797b82fa8ce","CNTS":"253e41c457d52c63","GFX":"d7de77b2a7aa8353","PAL":"ac57e143642fd13d","CRTC":"5820c1822f777b43","VGA":"b383eae9ae14fe0c"}},
+  {"ck":[3,4978,2243044,2866],"secs":{"PLYR":"e5645a3c3d2d099b","RAND":"85330cfd1af7e601","LEVL":"a143bbc1145b0297","CNTS":"83eb8a788f9d9d44","GFX":"d9df05940b64882b","PAL":"ac57e143642fd13d","CRTC":"5820c1822f777b43","VGA":"db40120deaf66f3d"}},
+  {"ck":[3,7181,37364683,2867],"secs":{"PLYR":"e5645a3c3d2d099b","RAND":"22f9319ac6ec2138","LEVL":"a143bbc1145b0297","CNTS":"cd9444540e0e0a28","GFX":"6222aedb5be30673","PAL":"ac57e143642fd13d","CRTC":"5820c1822f777b43","VGA":"e356b8298a550c1e"}},
+  {"ck":[2,0,37364684,3258],"secs":{"PLYR":"e5645a3c3d2d099b","RAND":"22f9319ac6ec2138","LEVL":"a143bbc1145b0297","CNTS":"c455c39b13643efa"}},
+  {"ck":[2,0,37856158,4096],"secs":{"PLYR":"c90da0fc7baf0649","RAND":"3e9f6c66db9f2f27","LEVL":"7e853fc0c5e4d821","CNTS":"4bd489874854859f"}},
+  {"ck":[2,0,38475196,5120],"secs":{"PLYR":"7183e65cad22015d","RAND":"1c797ed996f9c6f9","LEVL":"bcd728394e3db48d","CNTS":"b89d8790290174a7"}},
+  {"ck":[4,0,38939402,5885],"secs":{"PLYR":"ca4ec6c39f699895","RAND":"34a51014218da13d","LEVL":"62b9d7fef2d4d39e","CNTS":"edbe5b78ba6e6cd7","GFX":"ea3bd4250be4eb38","PAL":"29ce6c5b4dfa8822","CRTC":"b7a81f2b97e7f8a3","VGA":"4a813e28fe77d11c"}}
+ ]
+}

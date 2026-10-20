@@ -256,7 +256,10 @@ void far anm_cycle(struct Cycle far *cycles)
     unsigned char n;
     for (i = 0; i < 16; i++) {
         if (cycles[i].period != 0) {
-            if ((unsigned)(GAME_TIME() - cycles[i].started) <
+            /* the clock's low word: a 16-bit difference, which wraps (on the host an
+               (unsigned) cast keeps all 32 bits, and past FFFFh ticks every cycle turned
+               on every call) */
+            if ((uint16)(GAME_TIME() - cycles[i].started) <
                 0x38E / cycles[i].period) continue;
             n = cycles[i].last - cycles[i].first + 1;
             rotate_bank(cycles[i].first, n, 0);

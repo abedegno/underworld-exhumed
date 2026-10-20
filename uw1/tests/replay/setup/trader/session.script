@@ -1,0 +1,43 @@
+# trader: the saved game the overpay session (DOS's golden) starts from. A new character, as
+# the newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): 40 rubies (0xA2, value 25 each) into the pack,
+# and the player moved to level 2, (13,28), in the corridor beside the dwarf Brawnclan (whoami
+# 88, at (12,28), who trades); Shift+A twice to face west, at him. Saved in slot I, described
+# "trade". The rubies' value, 25 * 40 * quality 40, passes 7FFFh (assess_value, BARTER.C)
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat give 0xA2 26
+44100 cheat goto 2 13 28
+47000 down shift       # Shift+A twice: face west
+47050 key a
+47100 up shift
+48000 down shift
+48050 key a
+48100 up shift
+50000 down ctrl        # save: Ctrl+S, slot I, "trade"
+50100 key s
+50300 up ctrl
+52000 key enter
+53500 key t
+53700 key r
+53900 key a
+54100 key d
+54300 key e
+55200 key enter

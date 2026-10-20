@@ -236,9 +236,17 @@ saves = ["SAVE1", "SAVE2", "SAVE3", "SAVE4"]
 shared_opts = "-mm -1 -G -O -Y -d"     # replay.c in the replay DOS build, as UW2's
 # the replay DOS build's link: the modding build, to which replay.py adds --out, --obj, --add
 link = "{python} tools/link.py --mod --config {config}"
-order = ["newgame", "walk", "sound", "soundfm", "soundmt", "items", "talk", "load", "intro", "savecursor"]
+order = ["newgame", "walk", "sound", "soundfm", "soundmt", "items", "talk", "load", "intro", "savecursor", "female", "fallrestore", "tooheavy", "fallpause", "overpay", "powerkill"]
 c0_signature_at = 8                    # DS:8, after DS:0..3 (an overlay stub's tail) and C0's DS:4..7
-stage_from = { load = "items" }
+# tooheavy starts from the saved game setup/tidy-heavy writes: a port-made setup session whose
+# script uses a test's cheats (recording format 6), which only the port replays, so its saved
+# game comes from the port's replay in golden and verify alike, and DOS judges tooheavy from it
+# fallpause, overpay and powerkill were recorded by the port from input scripts
+# (tests/replay/NAME.script; no cheats, so format 4, which DOS replays), and have no steps here:
+# js-dos runs the game flat out, at which a walking player hardly moves, and its steps cannot
+# drag the mouse. Their goldens are DOS's replays all the same; overpay and powerkill start
+# from setup sessions, as tooheavy does
+stage_from = { load = "items", tooheavy = "setup/tidy-heavy", fallpause = "fallrestore", overpay = "setup/trader", powerkill = "setup/headless" }
 # the port's driver logs, and the real drivers run against them (Exhume's tools/ailcheck.py)
 port_sound_logs = ["--ail-log", "--hw-log"]
 driver_check = "{python} {exhume}/tools/ailcheck.py --config {config} {ail} {hw}"
@@ -327,6 +335,12 @@ talk = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 load = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 intro = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 savecursor = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+female = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+fallrestore = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+tooheavy = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+fallpause = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+overpay = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+powerkill = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 sound = "3 7 220 1 sound\r\n1 7 220 1 speech\r\n0 cuts\r\n"
 soundfm = "3 7 220 1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 soundmt = "6 2 330 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
@@ -354,6 +368,18 @@ _chargen = [
 # boot, the title, the main menu, a new character, sixteen seconds in the game;
 # tools/replaydos.mjs then sends F12
 newgame = ["@_chargen", "w:4000", "s:ingame1", "w:6000", "s:ingame2", "w:6000"]
+# a female character with the last portrait (issue 8): the way in as _chargen's, but Down before
+# Enter at the sex question and Down four times before Enter at the portraits. Her bodies are
+# CHRBTNS.GR's pictures 22 to 26, and every one after the first starts past 7FFFh in the
+# pictures' block, where CHARGEN.C's offsets were signed on the host and the port stopped
+female = [
+    "w:9000", "k:Escape", "w:3000", "k:Escape", "w:3000", "k:Enter", "w:3000", "k:ArrowDown",
+    "w:800", "s:sex", "k:Enter", "w:2000", "k:Enter", "w:2000", "k:Enter", "w:2000", "k:Enter",
+    "w:2000", "k:Enter", "w:2000", "k:Enter", "w:2000", "s:portraits", "k:ArrowDown", "w:600",
+    "k:ArrowDown", "w:600", "k:ArrowDown", "w:600", "k:ArrowDown", "w:800", "s:portraitsel",
+    "k:Enter", "w:2000", "s:portrait", "k:Enter", "w:2000", "t:Avatar", "w:1000", "k:Enter",
+    "w:2000", "k:Enter", "w:4000", "s:ingame1", "w:6000", "s:ingame2", "w:3000"
+]
 # the way into the game, then about forty seconds in the 3D view: walk forward (w held), turn
 # left and right (a, d), look up and down and level again (3, 1, 2), step back (s), slide (z,
 # c) and press the left button in the view, so that frames from many positions, a pitched view
@@ -540,6 +566,19 @@ load = [
     "w:9000", "k:Escape", "w:3000", "s:menu", "k:Enter", "w:3000", "s:slots", "k:Enter",
     "w:6000", "s:loaded", "h:w,800", "w:1500", "s:load_end"
 ]
+# issue 9, in DOS: from the saved game setup/tidy-heavy writes (the player carrying all they can,
+# 200 coins, with 20 more at their feet), "Journey Onward" and slot I; look down twice, get mode
+# (F3), the right button on the coins, Enter at "Move how many? 1": "That is too heavy for you to
+# pick up", and the split stack's copy is lost (player_3dget unlinks it and never frees it); then
+# a save to slot I described "leak" and a restore of it, whose check of the object lists says
+# "Problems in object list". The golden is DOS's, so the port's faithful leak is proven against it
+tooheavy = [
+    "w:9000", "k:Escape", "w:3000", "k:Enter", "w:3000", "k:Enter", "w:9000", "s:loaded", "k:1",
+    "w:1000", "k:1", "w:1500", "k:F3", "w:500", "M", "m:314,216", "w:300", "c:right,200",
+    "w:2000", "s:howmany", "k:Enter", "w:2000", "s:tooheavy", "k:Control+s", "w:1500", "k:Enter",
+    "w:1500", "t:leak", "w:800", "k:Enter", "w:4000", "s:saved", "k:Control+r", "w:1500",
+    "k:Enter", "w:6000", "s:restored", "w:2000"
+]
 # boot with no saved game and no key at all: the title, then the whole introduction (about
 # four and a half minutes), to the main menu. The only session that plays a cutscene through
 intro = [
@@ -560,4 +599,80 @@ savecursor = [
     "k:Control+s", "w:1500", "k:Enter", "w:1500", "t:held", "w:800", "k:Enter", "w:4000",
     "s:saved", "h:a,1000", "w:800", "k:Control+r", "w:1500", "k:Enter", "w:5000", "s:restored",
     "h:w,600", "w:1500", "s:end"
+]
+# a restore while falling (issue 10's port difference): the way to Bragit's room as talk's (the
+# Red Key, the door at (22,5) opened), then west along row 5 to the wall at (16,5) (fourteen steps,
+# so that a step a slope refuses does not matter), north to (16,6), and west along the corridor
+# with fixed steps over the slope at (10,6) to the platform at (9,6), height B, facing north; a
+# save to slot I there ("edge"), w held a second, which runs north off the platform, ten heights
+# down into the corridor at (9,7), and Ctrl+R and Enter while the player is still falling. A
+# restore does not reset the player's motion (PN), and check_physics caps the first step after
+# it at 40h units, so space_to_motion's MP.vel[MP.major] * CP->time is 821 * 64 = 52544 and then
+# 547 * 64 = 35008: a 16-bit int multiply in Turbo C, which wraps to -12992 and -30528 in DOS,
+# so the player there moves three steps and a remainder where 32 bits would make it four
+fallrestore = [
+    "@_chargen", "w:10000", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+A", "w:600",
+    "k:Shift+A", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+A", "w:600", "k:Shift+A", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+D", "w:600", "k:Shift+D", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+D", "w:600", "k:Shift+D", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+A", "w:600", "k:Shift+A", "w:600", "k:Shift+W", "w:600",
+    "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+W", "w:600", "k:Shift+D", "w:600",
+    "k:Shift+D", "w:600", "k:1", "w:500", "k:1", "w:600", "k:Shift+W", "w:700", "k:1", "w:500",
+    "k:1", "w:500", "k:F3", "w:500", "M", "m:185,240", "w:300", "c:right,200", "w:1500", "M",
+    "m:505,170", "w:300", "c:left,200", "w:1500", "k:F6", "w:500", "M", "m:505,170", "w:300",
+    "c:right,200", "w:2000", "k:2", "w:500", "k:Shift+A", "w:600", "k:Shift+A", "w:600",
+    "k:Shift+A", "w:600", "k:Shift+A", "w:600", "k:Shift+W", "w:700", "k:Shift+D", "w:600",
+    "k:Shift+D", "w:600", "M", "m:505,182", "w:300", "c:right,200", "w:1500", "M", "m:300,150",
+    "w:300", "c:right,200", "w:2000", "M", "m:300,150", "w:300", "c:right,200", "w:5000",
+    "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100",
+    "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100",
+    "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100",
+    "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+D", "w:1100", "k:Shift+D", "w:1100",
+    "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+A", "w:1100", "k:Shift+A", "w:1100",
+    "s:corridor", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W",
+    "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W",
+    "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+W",
+    "w:1100", "k:Shift+W", "w:1100", "k:Shift+W", "w:1100", "k:Shift+D", "w:1100", "k:Shift+D",
+    "w:1100", "s:edge", "k:Control+s", "w:1500", "k:Enter", "w:1500", "t:edge", "w:800", "k:Enter",
+    "w:4000", "s:saved", "h:w,1000", "k:Control+r", "w:1500", "s:prompt", "k:Enter", "w:5000",
+    "s:restored", "w:2000", "s:end"
+]
+
+[test]
+# Exhume's tools/test.py tiers: its default steps (the ones UW2 uses), with UW1's map notes check
+# after the black box (tools/notescheck.py: a note with no 0 in its 50 bytes, issue 7)
+fast = [
+    ["the gate", "{python} {exhume}/tools/gate.py --config {config} check"],
+    ["port build", "{python} {exhume}/tools/portbuild.py --config {config}"],
+    ["fuzzing, quick", "{python} {exhume}/tools/fuzzasm.py --config {config}", "port build"],
+    ["sessions against the goldens", "{python} {exhume}/tools/replay.py --config {config} verify all", "port build"],
+    ["enhancements", "{python} {exhume}/tools/enhcheck.py --config {config} all", "port build"],
+    ["settings screen", "{python} {exhume}/tools/setcheck.py --config {config} all", "port build"],
+    ["player movement", "{python} {exhume}/tools/movecheck.py --config {config}", "port build"],
+    ["the black box", "{python} {exhume}/tools/blackboxcheck.py --config {config}", "port build"],
+    ["map notes", "{python} tools/notescheck.py --config {config}", "port build"],
+]
+full = [
+    ["the gate", "{python} {exhume}/tools/gate.py --config {config} check"],
+    ["port build", "{python} {exhume}/tools/portbuild.py --config {config}"],
+    ["port-debug build", "{python} {exhume}/tools/portbuild.py --config {config} --debug"],
+    ["goldens from DOS, twice each", "{python} {exhume}/tools/replay.py --config {config} golden all"],
+    ["sessions against the goldens", "{python} {exhume}/tools/replay.py --config {config} verify all", "port build"],
+    ["sessions in the UBSan build", "{python} {exhume}/tools/replay.py --config {config} verify all --debug", "port-debug build"],
+    ["sound drivers", "{python} {exhume}/tools/replay.py --config {config} drivers", "port build"],
+    ["fuzzing, deep", "{python} {exhume}/tools/fuzzasm.py --config {config} --deep", "port build"],
+    ["enhancements", "{python} {exhume}/tools/enhcheck.py --config {config} all", "port build"],
+    ["settings screen", "{python} {exhume}/tools/setcheck.py --config {config} all", "port build"],
+    ["player movement", "{python} {exhume}/tools/movecheck.py --config {config}", "port build"],
+    ["the black box", "{python} {exhume}/tools/blackboxcheck.py --config {config}", "port build"],
+    ["map notes", "{python} tools/notescheck.py --config {config}", "port build"],
+    ["coverage report", "{python} {exhume}/tools/coverage.py --config {config}", "port build"],
 ]

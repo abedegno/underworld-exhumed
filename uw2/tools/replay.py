@@ -155,6 +155,16 @@ SESSIONS['talk'] = _ENTRY + [
     's:nystul', 'k:1', 'w:3000', 's:talk1', 'k:1', 'w:3000', 's:talk2', 'k:1', 'w:3000',
     's:talk_end']
 
+# a female character with the last portrait (issue 8): newgame's way in, but Down before Enter
+# at the sex question and Down four times before Enter at the portraits. Her bodies are
+# CHRBTNS.GR's pictures 22 to 26, and every one after the first starts past 7FFFh in the
+# pictures' block, where CHARGEN.C's offsets were signed on the host and the port stopped
+SESSIONS['female'] = ['w:14000', 'k:Escape', 'w:2500', 'k:Escape', 'w:3500', 'k:Enter', 'w:4000',
+                      'k:ArrowDown', 'w:800', 's:sex'] + ['k:Enter', 'w:2000'] * 6 + \
+                     ['s:portraits'] + ['k:ArrowDown', 'w:600'] * 4 + ['s:portraitsel', 'k:Enter', 'w:2000',
+                      's:portrait', 'k:Enter', 'w:2000', 't:Avatar', 'w:1000', 'k:Enter', 'w:2000', 'k:Enter',
+                      'w:4000', 's:ingame1', 'w:6000', 's:ingame2', 'w:3000']
+
 # boot with no saved game and no key at all: the title, then the whole introduction (Lord
 # British's letter: the festival street's horizontal pan, the castle's vertical pan over two
 # lback pictures, the banquet), to the main menu. The only session that plays the cutscenes

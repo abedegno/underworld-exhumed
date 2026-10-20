@@ -336,7 +336,10 @@ void far do_objsort(union Link far *link)
             distance += temp * temp;
             temp = (objyloc - cPlayer->z) >> 5;
             distance += temp * temp;
-            if (distance > 0) temp = cSqRt(distance);
+            /* the sum is a 16-bit int (imul and add, then a signed test and cwd), which wraps
+               for an object about 23 tiles off, which DOS then shades as if beside the player;
+               the host's int kept 32 bits */
+            if ((int16)distance > 0) temp = cSqRt((int16)distance);
             else temp = 0;
             distance = temp * smooth_div >> 6;
             distance += smooth_lowpass;

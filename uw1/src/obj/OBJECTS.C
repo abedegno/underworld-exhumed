@@ -598,10 +598,65 @@ unsigned char far count_list(struct Object far *obj, unsigned char *counts)
 /* name: ours (no symbol-bearing build); match: this file's _DATA starts here, DS:02D6. */
 static char objlist_complained = 0;
 
+#ifndef __TURBOC__
+/* Port only: --enhance tidy-objects. Puts back on the free static stack each static object
+   that is neither free nor reachable, as Obj_Free would: the objects player_3dget leaked in
+   the original (a split stack too heavy to pick up, unlinked and never freed; UW2 frees it),
+   which make the check below fail on arriving at the level. The objects are counted exactly
+   as Obj_ListOkay counts them (the free stacks, every tile's list through flog_list, and the
+   cursor object in input modes 0 and 1); nothing is changed unless every object was met at
+   most once and the mobile objects add up, and nothing when an object is on the cursor in
+   another input mode, where Obj_ListOkay does not count it. Mobile objects are never
+   touched. */
+static void tidy_objects(void)
+{
+    uint16 far *p;
+    struct Tile far *t;
+    unsigned char *counts;
+    int nmobile, i;
+
+    if (CursorObjPtr != 0 && GameInputMode != 0 && GameInputMode != 1)
+        return;
+    if ((counts = calloc(1, NUM_OBJECTS)) == 0)
+        return;
+    nmobile = GrSq < 0;
+    for (p = critptr; p >= critbot; p--) {
+        counts[*p]++;
+        nmobile++;
+    }
+    for (p = objptr; p >= objbot; p--)
+        counts[*p]++;
+    objcount = mobcount = 0;
+    for (t = mapdata, i = 0; i < MAP_SIZE * MAP_SIZE; i++, t++)
+        if (t->objects.f.index > 0)
+            flog_list(i % MAP_SIZE, i / MAP_SIZE, counts, &t->objects);
+    if (CursorObjPtr != 0)
+        count_list(CursorObjPtr, counts);
+    for (i = 0; i < NUM_OBJECTS; i++)
+        if (counts[i] > 1)
+            break;
+    if (i == NUM_OBJECTS && nmobile + mobcount == 0xFF)
+        for (i = NUM_MOBILE; i < NUM_OBJECTS && objptr < objtop; i++)
+            if (counts[i] == 0)
+                *++objptr = i;
+    free(counts);
+}
+#endif
+
 /* Checks the object lists (Obj_ListOkay) and reports the first failure through errmsg. */
 void far seg027_2861_EF9(void)
 {
+#ifndef __TURBOC__
+    char ok = (char)Obj_ListOkay(0);
+
+    if (!ok && ENHANCED(ENH_TIDY_OBJECTS)) {   /* port only: --enhance tidy-objects */
+        tidy_objects();
+        ok = (char)Obj_ListOkay(0);
+    }
+    if (!ok) {
+#else
     if (!(char)Obj_ListOkay(0)) {
+#endif
         if (!objlist_complained) {
             errmsg("Problems in", "object list");
             objlist_complained = 1;

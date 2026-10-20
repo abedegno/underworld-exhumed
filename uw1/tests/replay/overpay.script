@@ -1,0 +1,39 @@
+# overpay: recorded by the port from this script (no cheats, so format 4, which DOS replays),
+# from the saved game setup/trader writes; its golden is DOS's replay of that recording.
+# "Journey Onward" and slot I (the player facing Brawnclan with 40 rubies in the pack); talk
+# mode (F2) and the right button on him; answers 3 ("an adventurer") and 2 (trade); the rubies
+# dragged out of the pack, "Move how many?" answered 40, and the left button on the first of
+# the player's trade slots (twice: the first click ends the prompt); the left button on the
+# first of his slots, which selects his item; then 3, the player's appraisal (do_judgement),
+# and 1, the offer (do_offer). The rubies are worth 25 * 40 * 40 / 64 = 625 to the port before
+# its fix, and his item a few, so the gain is far above his greed and he took them; DOS works
+# it out in 16 bits, values the rubies below 0 and refuses ("No, I do not like this deal.").
+# Last, 4: no more bartering
+9000 key esc
+12000 key enter        # Journey Onward
+15000 key enter        # slot I
+22000 key f2           # talk
+22500 move 165 95
+22700 mdown 165 95 right
+22850 mup 165 95 right
+26000 key 3            # "I am an adventurer in search of fortune."
+29000 key 2            # "I would like to trade items with thee."
+32000 move 247 88      # the rubies, dragged out of the first slot of the pack
+32500 mdown 247 88 left
+32800 move 230 70
+33200 mup 230 70 left
+34500 key backspace    # "Move how many? 1": 40
+34800 key 2
+35100 key 6
+35500 key enter
+36500 move 156 20      # the player's first trade slot, twice
+36700 mdown 156 20 left
+36900 mup 156 20 left
+37500 mdown 156 20 left
+37700 mup 156 20 left
+38500 move 101 20      # his first trade slot: select its item
+38700 mdown 101 20 left
+38900 mup 101 20 left
+40000 key 3            # "Excuse me, I must think about this deal." (the appraisal)
+44000 key 1            # "I make thee this offer."
+48000 key 4            # "I do not wish to barter any further."

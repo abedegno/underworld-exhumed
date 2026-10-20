@@ -2,6 +2,20 @@
 
 For players. Each release's notes are drafted from here. Releases are tagged `uw2-vX.Y.Z` (before the move to Underworld Exhumed, `vX.Y.Z`).
 
+## 1.2.3 (14 October 2026)
+
+- **Fixed:** creating a female character crashed the game on choosing any portrait but the first (UW1's issue 8, which UW2 shares). DOS draws her; the port now does too.
+- **Fixed:** a map note with no end in a damaged or edited save could crash the game when the map was opened. The port now cuts such a note short, as the UW1 port does for its issue 7.
+- **Fixed:** the recording of a session the port crashed in could be cut short on Windows, so that it did not replay to the crash: the crash handler did not see a fault on the game's thread, where the game runs. This was found from UW1's issue 8, whose crash recordings from Windows were cut short; the UW2 port had the same fault and gets the same fix. The handler is now installed on the game's thread too, so the recording is written out whole.
+- **Changed:** a session's recording folder now holds only what a replay of it needs from the home folder: the saved games and the `DATA` folder (`UW.CFG`, and any file of yours there that the port reads in place of the game's own, such as a translated `STRINGS.PAK`). Before, it copied everything else there too: a game copied out of GOG's CD image (`gog-cd`), MT-32 ROMs, or a game folder you put there, none of which belongs in a bug report. Links to folders or files elsewhere are not followed.
+- **Fixed:** once the game had been running for a few minutes, a cutscene's colour cycling turned on every pass instead of at its own pace. It now keeps DOS's pace however long the game has run.
+- **Fixed:** a strings file with a block larger than 32 KB (only modified or translated files have one; the GOG release's do not) gave garbled text. The port now reads it as DOS does.
+- **Fixed:** restoring a game while running fast or falling could put you down a little further on than DOS does (UW1's issue 10, which UW2 shares in its code). The original works out the first step after a restore in 16 bits, and the result wraps; the port worked it out in 32 bits. It now does as DOS does.
+- **Fixed:** offering a trader far more than their goods are worth could be refused in DOS, with your own appraisal calling it "an excellent deal", where the port accepted it and called it "a terrible deal" (found in UW1, whose code UW2 shares here). The original works out the deal in 16 bits, so a large enough gap wraps round; the port worked it out in 32 bits. It now does as DOS does.
+- **Fixed:** a fall at walking pace, paused partway (by opening and closing the restore prompt, say), could stop for a moment in mid-air in DOS, as if landing, where the port carried on down (found in UW1, whose code UW2 shares here). The port now does as DOS does.
+- **Fixed:** five more places where the original works in 16 bits and the port worked in 32 now do as DOS does (found in UW1, whose code UW2 shares here): how hard a heavy creature knocks an object it falls on, the distance from a critter to a target 23 tiles or more away, the shading of an object about 23 tiles off, a value that conversations save for an NPC with 128 hit points or more, and the acceleration of a player with strength 30 carrying nearly all they can.
+- **New:** optional enhancement restore-at-rest (UW1's issue 10, which UW2 shares in its code; `--enhance restore-at-rest`). A restored game starts at rest where it was saved, instead of keeping the speed and any fall of the game you restored from. A game saved in mid-air still falls, from rest.
+
 ## 1.2.2 (10 October 2026)
 
 - **Fixed:** each play session's recording is now kept in its own folder under `recordings/` in the port's home folder, the newest five, as the documentation says. Before, there was one recording a day (in a `RECORDIN` folder), overwritten by each later session that day. An old `RECORDIN` folder there is no longer used and can be large: it is safe to delete.

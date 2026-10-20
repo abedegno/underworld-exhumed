@@ -17,7 +17,7 @@ make -C uw1 web                           # uw1/build/web/uw1port.js and .wasm
 make -C uw1 webcheck                      # every recorded session replayed under Node.js
 ```
 
-`make -C uwN web` builds two programs from the same objects: the page's, in `uwN/build/web`, and one for Node.js, in `uwN/build/web-node`. `make -C uwN webcheck` runs every recorded session in the Node.js one against its DOS golden, as `make test` does for the desktop port. It takes minutes.
+`make -C uwN web` builds two programs from the same objects: the page's, in `uwN/build/web`, and one for Node.js, in `uwN/build/web-node`. `make -C uwN webcheck` runs every recorded session in the Node.js one against its DOS golden, as `make test` does for the desktop port. It takes minutes. A setup session made with a test's cheats (`tests/replay/setup/`) is replayed in the desktop build instead (`EXHUME_CHEAT_PORT`), since the web build refuses cheats; the sessions that start from its saved game are replayed in the Node.js one.
 
 The web libraries are built with pthreads on. Anything that links them must also be compiled and linked with `-pthread`, or wasm-ld refuses the link (an object built without threads cannot share memory). `tools/portbuild.py --web` does this for every object.
 
@@ -42,6 +42,10 @@ Only the pair the port would play from is packed, however many images `ROMS_DIR`
 
 ## Deploying
 
+The site at https://abedegno.github.io/underworld-exhumed-web/ is deployed as part of a release. Publishing a release (not a prerelease) runs `.github/workflows/site.yml`, which finds each game's latest published final release (the highest `uw1-vX.Y.Z` and `uw2-vX.Y.Z` that is neither a draft nor a prerelease), checks each out at its tag in a worktree of its own, and runs `web/deploy.sh --push --replace` with `--uw1-tree` and `--uw2-tree` naming them, the game files and ROMs from the private bundles, and the deploy key `WEB_DEPLOY_KEY` (docs/BUILDING.md, "Continuous integration"). So the site always runs the latest release of each game, whichever game was released. The page, the page checks and `deploy.sh` itself are the workflow's commit's, which for a release is the published tag's. Run by hand (Actions, `site`, Run workflow) it is a dry run unless `push` is ticked; `skip_replays` passes `--skip-replays`. The run's summary names the release and commit of each game. The workflow file must be in the published tag's commit for the release to run it.
+
+`web/deploy.sh` by hand still works, from any checkout:
+
 ```sh
 sh web/deploy.sh OWNER/NAME ~/UWGOG/UW1 ~/UWGOG/UW2 ROMS_DIR           # a dry run
 sh web/deploy.sh --push OWNER/NAME ~/UWGOG/UW1 ~/UWGOG/UW2 ROMS_DIR    # the deploy
@@ -54,6 +58,8 @@ The options come before the arguments: an option after `OWNER/NAME` is refused.
 It refuses a repository that is the origin of this repository or of Exhume, and the project's own repositories by name (underworld-exhumed, Exhume, UW1Decomp, UW2Decomp, uw1-ci-assets, uw2-ci-assets, UWReverseEngineering, UnderworldGodot, emulators, dos-mcp, uw2-personal-notes), before it builds anything. Because the push is forced, `--push` also refuses a repository that already has a `gh-pages` branch unless `--replace` is given too.
 
 `--skip-replays` runs only `make web`, not `make webcheck`, for a quick redeploy of builds that have already been checked. The page checks always run.
+
+`--uw1-tree DIR` and `--uw2-tree DIR` build that game in another checkout of this repository instead of this one, as `site.yml` does with a worktree at each game's release tag (`git worktree add --detach DIR uw1-v1.0.2`, then `git -C DIR submodule update --init`). That tree's own `make web webcheck`, build and `web/pack.sh` are used, so the game, its runtime, its checks and its ROM choice all come from the release; the page, the page checks and the deploy come from the tree `deploy.sh` is in. The site's commit names each game's tree by its release tag (`git describe`).
 
 **The game data and the MT-32 ROMs are the deployer's own.** They go into the site and nowhere else: never into this repository or any other. `*.data` and `*.data.js` are ignored by git here, and both scripts refuse a site folder inside a git repository. The site repository should be one the deployer created for the purpose.
 

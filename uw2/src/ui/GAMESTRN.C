@@ -262,8 +262,12 @@ char far * far read_string(int block, int string)
     if (string_count <= string) { result[index] = 0; return result; }
     fseek(StringsPak_FileHandle, (unsigned)(string << 1), 1);
     fread(&relative, 2, 1, StringsPak_FileHandle);
+    /* a 16-bit sum, as DOS's. On the host, relative from 8000h up was sign-extended and
+       (unsigned) kept 32 bits, and fseek's long made of that was wrong either way: where long is
+       64 bits (macOS, Linux) a seek about 4 GB forward, and where it is 32 bits (Windows) a seek
+       backwards (only a strings file with a block over 32 KB has such a relative) */
     fseek(StringsPak_FileHandle,
-        (unsigned)(((string_count - (string + 1)) << 1) + relative), 1);
+        (uint16)(((string_count - (string + 1)) << 1) + relative), 1);
     string_bits_used = 8;
     c = '|';
     do {

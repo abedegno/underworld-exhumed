@@ -140,6 +140,10 @@ jobs:
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/logs"
           make -C uw2 PY=python verify 2>&1 | tee "$RUNNER_TEMP/logs/verify-windows.log"
+      - name: The black box
+        run: |
+          set -o pipefail
+          make -C uw2 PY=python blackbox 2>&1 | tee "$RUNNER_TEMP/logs/blackbox-windows.log"
       - name: "MT-32: how the port finds the ROMs, and soundmt's audio"
         run: |
           py=$(command -v python3 || command -v python)

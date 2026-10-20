@@ -915,8 +915,11 @@ void far player_killed_a(struct Object far *npc)
         set_new_music(MUSIC_VICTORY);
         exp = Creature[npc->id & ID_INMAJOR].exp;
         exp = exp * 4 + rollem(2, exp);
+        /* the product is a 16-bit int (imul, then cwd before the idiv): for a critter worth
+           about 120 or more it can wrap, and the kill can then take experience away; the
+           host's int kept 32 bits. UW2 has (int32)exp here, a fix DOS UW1 does not have */
         if (OBJ_POWERFUL(npc))
-            exp = exp * (rand() % 24 + 24) / 16;
+            exp = (int16)(exp * (rand() % 24 + 24)) / 16;
         player_get_exp(exp);
     }
 }

@@ -1,0 +1,44 @@
+# headless: the saved game the powerkill session (DOS's golden) starts from. A new character,
+# as the newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): attack and barehand skills 30, strength 30,
+# and the player moved to level 6, (45,60), beside a headless at (46,60): a powerful one
+# (OBJ_POWERFUL), worth 162 experience (OBJECTS.DAT), with 11 hit points; Shift+D twice to
+# face east, at it. Saved in slot I, described "kill"
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat set attack 30
+44100 cheat set barehand 30
+44200 cheat set str 30
+44300 cheat goto 6 45 60
+47000 down shift       # Shift+D twice: face east
+47050 key d
+47100 up shift
+48000 down shift
+48050 key d
+48100 up shift
+50000 down ctrl        # save: Ctrl+S, slot I, "kill"
+50100 key s
+50300 up ctrl
+52000 key enter
+53500 key k
+53700 key i
+53900 key l
+54100 key l
+55000 key enter

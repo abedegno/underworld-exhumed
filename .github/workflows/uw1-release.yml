@@ -121,7 +121,12 @@ jobs:
           sub=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id"))' "$RUNNER_TEMP/notary.json")
           echo "notarisation $sub: $status"
           if [ "$status" != Accepted ]; then xcrun notarytool log "$sub" "${auth[@]}" || true; exit 1; fi
-          xcrun stapler staple "$stage/UW1.app"
+          # Apple's ticket service can drop the first fetches of a ticket it has only just issued
+          for try in 1 2 3 4 5 6; do
+            xcrun stapler staple "$stage/UW1.app" && break
+            [ "$try" = 6 ] && exit 1
+            echo "staple attempt $try failed; trying again in 60 s"; sleep 60
+          done
           xcrun stapler validate "$stage/UW1.app"
           rm "$zip"
           ditto -c -k --norsrc --noextattr --keepParent "$stage" "$zip"

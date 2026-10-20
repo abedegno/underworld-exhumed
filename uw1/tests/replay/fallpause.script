@@ -1,0 +1,35 @@
+# fallpause: recorded by the port from this script (no cheats, so format 4, which DOS
+# replays), from the saved game fallrestore writes; its golden is DOS's replay of that
+# recording. "Journey Onward" and slot I (the player on the platform at (9,6), facing north);
+# Shift+D, 45 degrees; s held a second, which walks north-east off the platform's edge at the
+# walking speed, 352, so 248 on each axis (a player under 3/10 of the run speed stops at a
+# ledge instead); then the restore prompt opened and cancelled (Ctrl+R, Escape) four times
+# while the player falls. The first step after each prompt is check_physics's 40h units, a
+# whole step, and zspeed is the fall over the slow axis (vel2 * 256 / 248), 1222 at the
+# second prompt, so MOTION.C's full_move shifts it out of 16 bits: in DOS the step comes out
+# upwards and full_move takes it for a landing (do_zbounce) in mid-air, where the port before
+# its fix moved the player down
+9000 key esc
+12000 key enter        # Journey Onward
+15000 key enter        # slot I
+25000 down shift       # Shift+D: 45 degrees right
+25050 key d
+25100 up shift
+27000 down s           # walk
+28000 up s
+28200 down ctrl        # the restore prompt, cancelled, four times
+28250 key r
+28300 up ctrl
+28600 key esc
+28750 down ctrl
+28800 key r
+28850 up ctrl
+29150 key esc
+29300 down ctrl
+29350 key r
+29400 up ctrl
+29700 key esc
+29850 down ctrl
+29900 key r
+29950 up ctrl
+30250 key esc

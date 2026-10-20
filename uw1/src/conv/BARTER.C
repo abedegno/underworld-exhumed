@@ -649,7 +649,11 @@ int far do_offer(int16 far *args)
                                                        play_appraisals, npc_assess);
     npc_value = total_offering_ovr097_17CB(0, barter_npc_ids, npc_select,
                                                     npc_appraisals, npc_assess);
-    if (npc_value > 0) eval = (player_value - npc_value) * 100 / npc_value;
+    /* 16-bit ints, as Turbo C's: the gain's product (imul, then cwd before the idiv) wraps
+       once the two sides differ by more than 327, so a gross overpayment comes out a loss
+       and is refused, where the host's int kept 32 bits and took it; the tests below are
+       16-bit too (shl ax,1; imul, cwd and idiv; a 16-bit sub) */
+    if (npc_value > 0) eval = (int16)((player_value - npc_value) * 100) / npc_value;
     else eval = 100;
     if (eval >= greed) {
         npc_say(get_string(yes_str));
@@ -659,14 +663,14 @@ int far do_offer(int16 far *args)
         return 1;
     }
     if (last_offer == 0) {
-        if (eval * 2 < greed) {
+        if ((int16)(eval * 2) < greed) {
             npc_say(get_string(no_str));
             patience--;
         }
     } else if (eval < last_offer) {
         npc_say(get_string(worse_str));
         patience -= 2;
-    } else if ((greed - last_offer) * 3 / 2 > greed - eval) {
+    } else if ((int16)((greed - last_offer) * 3) / 2 > (int16)(greed - eval)) {
         npc_say(get_string(no_str));
         patience--;
     }
@@ -756,7 +760,8 @@ void far do_judgement(void)
                     play_select, play_judgement, accuracy);
     npc_value = total_offering_ovr097_17CB(0, barter_npc_ids,
                     npc_select, npc_judgement, accuracy);
-    if (npc_value > 0) evaluation = (player_value - npc_value) * 100 / npc_value;
+    /* 16-bit, as do_offer's: an offer far above the NPC's can wrap to "an excellent deal" */
+    if (npc_value > 0) evaluation = (int16)((player_value - npc_value) * 100) / npc_value;
     else evaluation = 100;
     if (skill < 6) certainty = 0;
     else if (skill < 12) certainty = 1;
@@ -794,7 +799,7 @@ int far total_offering_ovr097_17CB(int use_likes, int16 *items,
             total += values[i];
         }
     }
-    return total;
+    return (int16)total;                /* a 16-bit sum (add di), which wraps as DOS's does */
 }
 
 /* An object's value, scaled by quantity and quality and blurred by up to accuracy %,
@@ -815,16 +820,19 @@ int far assess_value(int use_likes, int item, int accuracy)
         disposition = does_npc_like(item);
         if (disposition == -1) return 0;
         value = ComObjData[OBJ_ITEM(obj)].value;
-        if (disposition) value = value * 3 >> 1;
+        if (disposition) value = (int16)(value * 3) >> 1;
     } else value = ComObjData[OBJ_ITEM(obj)].value;
     if (OBJ_ISQUANT(obj) && !(obj->ol.f.link & LINK_SPECIAL))
         quantity = obj->ol.f.link;
     else quantity = 1;
-    value *= quantity;
+    /* 16-bit ints, as Turbo C's (imul, the low word kept, and imul then sar ax,6): a stack
+       or a valuable item passes 7FFFh, and then DOS values it below 0 or at a fraction, where
+       the host's int kept 32 bits until the store into values[] */
+    value = (int16)(value * quantity);
     quality = obj->qn.f.quality;
     if (value > 0) {
         if (quality > 0) {
-            value = value * quality >> 6;
+            value = (int16)(value * quality) >> 6;
             if (value == 0) value = 1;
         } else value = 0;
     }
@@ -837,7 +845,9 @@ int far assess_value(int use_likes, int item, int accuracy)
 /* base plus a random min..max % of it (max itself excluded). */
 int far range(int base, int min, int max)
 {
-    return base + base * (min + (int)(((int32)rand() * (max - min)) / 0x8000L)) / 100;
+    /* the product is a 16-bit int (imul, then cwd before the idiv), which wraps once base
+       times the percentage passes 7FFFh; the callers store the sum in 16 bits */
+    return base + (int16)(base * (min + (int)(((int32)rand() * (max - min)) / 0x8000L))) / 100;
 }
 
 /* The item types and indexes of the player's selected items; returns how many. */

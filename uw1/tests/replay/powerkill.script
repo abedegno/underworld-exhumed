@@ -1,0 +1,63 @@
+# powerkill: recorded by the port from this script (no cheats, so format 4, which DOS
+# replays), from the saved game setup/headless writes; its golden is DOS's replay of that
+# recording. "Journey Onward" and slot I (the player facing the powerful headless, 162
+# experience, at (46,60) on level 6); F5, and the right button held 0.9 s in the middle of the
+# view every 1.5 s, 25 times, which kills it. player_killed_a gives 162 * 4 + 2d162 = 919, and
+# for a powerful critter that times 24 to 47 (here 39) over 16, which in 16 bits is 919 * 39 =
+# 35841, -29695 in DOS, so -1855: the kill takes experience away, where the port before its
+# fix gave 2240
+9000 key esc
+12000 key enter
+15000 key enter
+19000 key f5          # F5
+19300 move 160 90
+20000 mdown 160 90 right
+20900 mup 160 90 right
+21500 mdown 160 90 right
+22400 mup 160 90 right
+23000 mdown 160 90 right
+23900 mup 160 90 right
+24500 mdown 160 90 right
+25400 mup 160 90 right
+26000 mdown 160 90 right
+26900 mup 160 90 right
+27500 mdown 160 90 right
+28400 mup 160 90 right
+29000 mdown 160 90 right
+29900 mup 160 90 right
+30500 mdown 160 90 right
+31400 mup 160 90 right
+32000 mdown 160 90 right
+32900 mup 160 90 right
+33500 mdown 160 90 right
+34400 mup 160 90 right
+35000 mdown 160 90 right
+35900 mup 160 90 right
+36500 mdown 160 90 right
+37400 mup 160 90 right
+38000 mdown 160 90 right
+38900 mup 160 90 right
+39500 mdown 160 90 right
+40400 mup 160 90 right
+41000 mdown 160 90 right
+41900 mup 160 90 right
+42500 mdown 160 90 right
+43400 mup 160 90 right
+44000 mdown 160 90 right
+44900 mup 160 90 right
+45500 mdown 160 90 right
+46400 mup 160 90 right
+47000 mdown 160 90 right
+47900 mup 160 90 right
+48500 mdown 160 90 right
+49400 mup 160 90 right
+50000 mdown 160 90 right
+50900 mup 160 90 right
+51500 mdown 160 90 right
+52400 mup 160 90 right
+53000 mdown 160 90 right
+53900 mup 160 90 right
+54500 mdown 160 90 right
+55400 mup 160 90 right
+56000 mdown 160 90 right
+56900 mup 160 90 right

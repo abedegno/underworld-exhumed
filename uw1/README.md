@@ -6,7 +6,7 @@ This folder is *Ultima Underworld: The Stygian Abyss* in [Underworld Exhumed](..
 Ultima Underworld: The Stygian Abyss (DOS, 1992; developed by Blue Sky Productions, later Looking Glass Technologies, published by Origin Systems), as source code. This repository has two products, built from the same sources:
 
 - **A byte-matching decompilation.** The C and assembly in `src/` compile with the original Borland tools to the same bytes as the shipped `UW.EXE`.
-- **A native cross-platform port, uw1port.** The same C, compiled for macOS, Linux and Windows with SDL3, plays the game in a window with its music and speech. Ten recorded DOS sessions replay in it with DOS's game state and screen at every checkpoint ([docs/PORT.md](docs/PORT.md)).
+- **A native cross-platform port, uw1port.** The same C, compiled for macOS, Linux and Windows with SDL3, plays the game in a window with its music and speech. Eleven recorded DOS sessions replay in it with DOS's game state and screen at every checkpoint ([docs/PORT.md](docs/PORT.md)).
 
 It is the sibling of [uw2/](../uw2/README.md), the matched decompilation of Ultima Underworld II, and was seeded from it: the two games share a compiler, libraries and much of an engine, a year apart. It is built with [Exhume](https://github.com/abedegno/Exhume), the toolkit both projects use.
 

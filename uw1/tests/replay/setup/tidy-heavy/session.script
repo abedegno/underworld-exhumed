@@ -1,0 +1,38 @@
+# tidy-heavy: the saved game the tooheavy session (DOS's golden) and the tidy-objects enhanced
+# session start from. A new character, as the newgame session makes one (every default, the
+# name avatar); then a test's cheats (EXHUME_TEST_CHEATS=1; recording format 6): strength 10,
+# so the player can carry 200 (20 stones), 200 coins (0xA0, a tenth of a stone each) into the
+# pack, which is all the player can carry, and a stack of 20 coins at the player's feet. Saved
+# in slot I, described "heavy". Taking one coin of the 20 is then too heavy (issue 9)
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat set str 10
+44100 cheat give 0xA0 200
+44200 cheat give 0xA0 20 drop
+47000 down ctrl        # save: Ctrl+S, slot I, "heavy"
+47100 key s
+47300 up ctrl
+49000 key enter
+50500 key h
+50700 key e
+50900 key a
+51100 key v
+51300 key y
+52000 key enter

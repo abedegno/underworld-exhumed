@@ -48,8 +48,10 @@ void far setup_converse_data(struct Object far *npc)
     bab_var("npc_whoami", &val, 1);
     val = OBJ_FED(npc) ? 0x10 : 0xC0;
     bab_var("npc_hunger", &val, 1);
+    /* a 16-bit int (shl ax,8, then cwd before the idiv): an NPC with 128 hit points or
+       more gets a health below 0, where the host's int kept 32 bits */
     if (crit->avghit != 0)
-        val = (npc->hp << 8) / crit->avghit;
+        val = (int16)(npc->hp << 8) / crit->avghit;
     else
         val = 0x80;
     bab_var("npc_health", &val, 1);
@@ -86,7 +88,7 @@ void far setup_converse_data(struct Object far *npc)
     val = player->hunger;
     bab_var("play_hunger", &val, 1);
     if (crit->avghit != 0)
-        val = (ThePlayer->hp << 8) / crit->avghit;
+        val = (int16)(ThePlayer->hp << 8) / crit->avghit;   /* 16-bit, as npc_health */
     else
         val = 0x80;
     bab_var("play_health", &val, 1);

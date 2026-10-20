@@ -30,6 +30,7 @@ void far mainloop(void)
     while (notdone)
     {
 #ifndef __TURBOC__
+        port_cheat_point();     /* port only: a test's cheats (Exhume's sys/cheat.c), between passes */
         if (port_shared_step()) continue;
         /* Native co-op sessions are pumped on the game thread, including on the map. */
         if (!port_shared_on()) port_coop_tick();

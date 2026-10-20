@@ -61,6 +61,31 @@ char far put_arc(struct Arc far *arc, int block, void far *buf, int len); /* wri
 /* UW1: seg015's pixel plot (UW2's gr_pixel). */
 unsigned char far grfx_load_font(char *name);
 
+#ifndef __TURBOC__
+/* Port only (docs/PORT.md, "Host hazards"; issue 7): a note's text into a 50-byte buffer as
+   str_copy copies it, but at most 49 characters and the 0. A note read from the archive need not
+   end in its 50 bytes: UW1's LEV.ARK has no length table, so a notes block of no length that
+   shares its offset with a later block (the layout SaveTheWords leaves when every note of a
+   level is erased) reads as that block, and a run of more than 49 bytes that are not 0 there
+   made str_copy write past the buffer. DOS then returns into low memory; the host's frame is
+   laid out otherwise, so where the port's extra bytes landed depended on the compiler (Apple
+   silicon's stack canary, an abort; x86-64's padding, with no byte to spare). A note that ends
+   in its 50 bytes is copied by str_copy, as DOS copies it; a longer one is cut, where DOS
+   writes over RedisplayStrings' saved BP and return address. */
+static char far *note_copy(char *dst, char far *src)
+{
+    int i;
+    for (i = 0; i < 0x32; i++)
+        if (src[i] == 0) return str_copy(dst, src);
+    for (i = 0; i < 0x31; i++) dst[i] = src[i];
+    dst[0x31] = 0;
+    return dst;
+}
+#define NOTE_COPY(dst, src) note_copy(dst, src)
+#else
+#define NOTE_COPY(dst, src) str_copy(dst, src)
+#endif
+
 /* Initialised data, DS:0ACA (the strings follow, to DS:0B49). */
 /* name: none of it has an FM Towns name, so it was static. */
 
@@ -386,11 +411,11 @@ struct ATM far * far DetermineBetterHit(struct ATM far *a, struct ATM far *b, in
         return b;
     if (b == 0)
         return a;
-    str_copy(buf, a->text);
+    NOTE_COPY(buf, a->text);
     w = string_width(buf);
     ax = abs(a->x + w / 2 - x);
     ay = abs(a->y - 2 - y);
-    str_copy(buf, b->text);
+    NOTE_COPY(buf, b->text);
     w = string_width(buf);
     bx = abs(b->x + w / 2 - x);
     by = abs(b->y - 2 - y);
@@ -511,7 +536,7 @@ void far ManageDungeonMap(void)
             best = 0;
             for (i = 0; i < num_words; i++) {
                 note = &ATM_Strings[i];
-                str_copy(text, note->text);
+                NOTE_COPY(text, note->text);
                 w = string_width(text);
                 if (note->x <= mx && note->x + w >= mx && note->y - 5 <= my && note->y >= my) {
                     best = DetermineBetterHit(best, note, mx, my);
@@ -521,7 +546,7 @@ void far ManageDungeonMap(void)
             }
             if (best) {
                 notes_dirty = 1;
-                str_copy(text, best->text);
+                NOTE_COPY(text, best->text);
                 w = string_width(text);
                 set_the_color(0x106);
                 rectangle(best->x, best->y, best->x + w, best->y - 5);
@@ -556,9 +581,9 @@ void far RedisplayStrings(void)
     *foreground_color = 0x2D;
     *background_color = 0x2D;
     for (i = 0; i < num_words; i++) {
-        str_copy(buf, ATM_Strings[i].text);
+        NOTE_COPY(buf, ATM_Strings[i].text);
         if (ATM_Strings[i].x >= 0) {
-            str_copy(buf, ATM_Strings[i].text);
+            NOTE_COPY(buf, ATM_Strings[i].text);
             string_to_screen(buf, ATM_Strings[i].x, ATM_Strings[i].y);
         }
     }

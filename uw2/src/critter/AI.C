@@ -908,7 +908,7 @@ unsigned char far turn_real_fine(signed char dx, signed char dy)
     register int sx;
 
     cur = (OBJ_HEADING(meptr) << 5) + OBJ_FINEHEAD(meptr);
-    d2 = tdx * tdx + tdy * tdy;
+    d2 = (int16)(tdx * tdx + tdy * tdy);    /* 16-bit, then cwd: wraps 23 tiles or more apart */
     dist = cSqRt(d2);
     ly = dx;
     lx = dy;
@@ -1343,7 +1343,10 @@ unsigned char far set_up_target(void)
     tdx = txpost - myxpost;
     tdy = typost - myypost;
     tdistsqr = (txpos - myxpos) * (txpos - myxpos) + (typos - myypos) * (typos - myypos);
-    tdisttsqr = (txpost - myxpost) * (txpost - myxpost) + (typost - myypost) * (typost - myypost);
+    /* an unsigned int, as Turbo C's (txpost is unsigned: two imuls and an add, the high word
+       set to 0), so 32 tiles or more apart wraps, where the host's int kept 32 bits */
+    tdisttsqr = (uint16)((txpost - myxpost) * (txpost - myxpost)
+                         + (typost - myypost) * (typost - myypost));
     return 1;
 }
 

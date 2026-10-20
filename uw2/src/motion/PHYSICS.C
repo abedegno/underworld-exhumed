@@ -776,7 +776,9 @@ void far newFPS(char state)
     else
         pTurn = PlayerTurn;
     if (player->max_weight && player->weight * 2 > player->max_weight)
-        MaxPlayerAccel = 0x60 - player->weight * 0x60 / (player->max_weight * 2);
+        /* an unsigned int (imul, the low word kept, then div), which wraps from a weight of
+           683 (68.3 stones): a player with strength 30 can carry 690 */
+        MaxPlayerAccel = 0x60 - (uint16)(player->weight * 0x60) / (player->max_weight * 2);
     else
         MaxPlayerAccel = 0x60;
 }

@@ -67,12 +67,15 @@ int far bounce_obj(struct Object far *obj, struct Object far *other)
         YP = objhit_tiley;
         get_phys_data(other, pp);
         if (pp->mass != 0) {
-            scale = (CP->mass << 6) / pp->mass;
+            /* 16-bit ints, as Turbo C's (shl ax,6, and imul, each then cwd before the idiv):
+               a mover of 512 (51.2 stones) or more gets a scale below 0, which the clamp
+               lets through, and the product wraps too, where the host's int kept 32 bits */
+            scale = (int16)(CP->mass << 6) / pp->mass;
             if (scale > 0x80)
                 scale = 0x80;
             pp->heading = CP->heading;
             pp->speed = 0xEB;
-            pp->vel[2] = CP->vel[2] * scale / 0x40;
+            pp->vel[2] = (int16)(CP->vel[2] * scale) / 0x40;
             XP = objhit_tilex;
             YP = objhit_tiley;
             set_phys_data(other, pp);

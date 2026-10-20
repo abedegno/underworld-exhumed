@@ -18,10 +18,12 @@
 #include "sound/audio.h"
 #include "sound/mt32roms.h"
 #include "sys/enhance.h"
+#include "sys/cheat.h"
 #include "sys/inscript.h"
 #include "ui/settings.h"
 
 extern const struct enhance_flag enhance_table[];   /* src/port/sys/enhtab.c */
+extern const struct cheat_game cheat_game;          /* src/port/sys/cheats.c: a test's cheats */
 
 int uw1_main(int argc, char *argv[]);
 void borland_init(void);
@@ -425,8 +427,12 @@ int main(int argc, char *argv[])
         enhance_list(stdout);
         return 0;
     }
-    /* a bad input script stops the run before anything is written */
+    /* a bad input script stops the run before anything is written; its cheat lines (a test's,
+       refused unless EXHUME_TEST_CHEATS=1) are checked against the game's table */
+    cheat_init(&cheat_game);
     if (input_script && inscript_load(input_script, plat_key_byte, plat_pointer_event) < 0) return 1;
+    /* a recording made with cheats (format 6) runs them again: a test's too */
+    if (replay && cheat_from_recording(replay) < 0) return 1;
     if (!home) {
         const char *h = getenv("HOME");
 #ifdef _WIN32

@@ -66,6 +66,34 @@ repocheck_exhume_checkout = '''
         with:
           submodules: true'''
 wf_prefix = ""
+# site.yml: the web build (docs/WEB.md, "Deploying") deployed to this repository's site when a
+# release is published, each game from its latest published release's tag
+web_site = "abedegno/underworld-exhumed-web"
+site_comment = '''
+# The web build deployed (docs/WEB.md, "Deploying"; docs/BUILDING.md, "Continuous integration"):
+# when a release is published (not a prerelease), each game's latest published final release
+# (uw1-vX.Y.Z, uw2-vX.Y.Z) is checked out at its tag and built there, for the web and the desktop
+# port that make webcheck needs; web/deploy.sh from this commit assembles the site with this
+# commit's page, packs the bundles' game files and MT-32 ROMs, checks it, and force-pushes it to
+# the gh-pages branch of abedegno/underworld-exhumed-web with the deploy key WEB_DEPLOY_KEY. By hand
+# (workflow_dispatch) it is a dry run unless push is set. It needs both private bundles.'''
+site_if = "vars.UW1_CI_ASSETS == 'true'"
+site_games = "uw1 uw2"
+site_checkout_submodules = "          submodules: true"
+site_exhume = "exhume"
+site_npm_ci = "npm ci --no-audit --no-fund --prefix exhume"
+site_emsdk_script = "exhume/tools/setup-emsdk.sh"
+site_assets = '''
+      - uses: ./.github/actions/uw1-assets
+        with:
+          deploy-key: ${{ secrets.UW1_ASSETS_DEPLOY_KEY }}
+          age-key: ${{ secrets.UW1_ASSETS_AGE_KEY }}
+      - uses: ./.github/actions/uw2-assets
+        with:
+          deploy-key: ${{ secrets.UW2_ASSETS_DEPLOY_KEY }}
+          age-key: ${{ secrets.UW2_ASSETS_AGE_KEY }}'''
+site_data = '"$UW1_DATA" "$UW2_DIR" "$MT32_ROMS"'
+site_cleanup = '"$RUNNER_TEMP/uw1-assets" "$RUNNER_TEMP/uw1-ci-assets" "$RUNNER_TEMP/uw1-assets-deploy-key" "$RUNNER_TEMP/uw2-assets" "$RUNNER_TEMP/uw2-ci-assets" "$RUNNER_TEMP/uw2-assets-deploy-key"'
 
 [[games]]
 test = "make -C uw1 test"
@@ -76,6 +104,7 @@ setup_sound = "sh exhume/tools/setup-sound.sh uw1/tools/nuked-opl3"
 port = "make -C uw1 port"
 verify = "make -C uw1 verify"
 verify_windows = "make -C uw1 PY=python verify"
+blackbox_windows = "make -C uw1 PY=python blackbox"
 setup_libs_windows = "SETUP_LIBS=mt32emu sh exhume/tools/setup-libs.sh uw1/tools/libs"
 port_check = "make -C uw1 port-check"
 port_windows = "make -C uw1 PY=python port"
@@ -381,6 +410,7 @@ setup_sound = "make -C uw2 setup-sound"
 port = "make -C uw2 port"
 verify = "make -C uw2 verify"
 verify_windows = "make -C uw2 PY=python verify"
+blackbox_windows = "make -C uw2 PY=python blackbox"
 setup_libs_windows = "UW2_LIBS=mt32emu make -C uw2 setup-libs"
 port_check = "make -C uw2 port-check"
 port_windows = "make -C uw2 PY=python port"

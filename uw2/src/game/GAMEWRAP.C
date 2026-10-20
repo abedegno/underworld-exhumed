@@ -247,6 +247,20 @@ char far RestoreGame(char slot)
                     do_level_hacks(PlayerLevel, 3);
                     game_sprint(0xB9);  /* '...' */
                     set_creatures_from_saved_game();
+#ifndef __TURBOC__
+                    /* port only: --enhance restore-at-rest. The save holds no motion, and
+                       the restore kept the motion of the game it replaced (PN's speed,
+                       velocity, acceleration and impact): cleared as player_setup does,
+                       and fiz_update set so that the next tick runs the physics, whose
+                       parse_player_terr gives a player saved in the air gravity again. */
+                    if (ENHANCED(ENH_RESTORE_AT_REST)) {
+                        PN.speed = 0;
+                        PN.acc[0] = PN.acc[1] = PN.acc[2] = 0;
+                        PN.vel[0] = PN.vel[1] = PN.vel[2] = 0;
+                        PN.impact = 0;
+                        fiz_update = 1;
+                    }
+#endif
                     return 1;
                 }
             }

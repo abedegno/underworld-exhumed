@@ -1,0 +1,28 @@
+# tidy-objects: from the menu, load the saved game setup/tidy-heavy writes (the player carrying
+# all they can, with 20 coins at their feet); look down twice, get mode (F3), the right button on
+# the coins and Enter at "Move how many? 1": too heavy. The original loses the split stack's copy
+# (the tooheavy session, DOS's golden); with the flag it is freed. Then a save to slot I
+# described "tidy" and a restore of it: the object lists check out, so no "Problems in object
+# list"
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+10000 key 1
+11000 key 1
+12500 key f3
+13000 move 157 108
+13500 mdown 157 108 right
+13800 mup 157 108 right
+15500 key enter        # Move how many? 1: too heavy
+18000 down ctrl        # save: Ctrl+S, slot I, "tidy"
+18100 key s
+18300 up ctrl
+20000 key enter
+21500 key t
+21700 key i
+21900 key d
+22100 key y
+23000 key enter
+27000 down ctrl        # restore: Ctrl+R, slot I
+27100 key r
+27300 up ctrl
+29000 key enter

@@ -1,0 +1,13 @@
+# restore-at-rest: from the menu, load the saved game the fallrestore session writes (on the
+# platform at (9,6), facing north), run north off its edge and, while still falling, restore it
+# (Ctrl+R, Enter, slot I). The player stands where the game was saved, unhurt; without it the
+# fall's motion carries into the restored game, which slides the player north and hurts them
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+10000 down w
+11000 up w             # released first: a held key can take the place of the R
+11050 down ctrl
+11200 key r
+11350 up ctrl
+12700 key enter        # slot I
+20000 move 160 100

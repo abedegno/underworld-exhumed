@@ -1,0 +1,136 @@
+# The web build deployed (docs/WEB.md, "Deploying"; docs/BUILDING.md, "Continuous integration"):
+# when a release is published (not a prerelease), each game's latest published final release
+# (uw1-vX.Y.Z, uw2-vX.Y.Z) is checked out at its tag and built there, for the web and the desktop
+# port that make webcheck needs; web/deploy.sh from this commit assembles the site with this
+# commit's page, packs the bundles' game files and MT-32 ROMs, checks it, and force-pushes it to
+# the gh-pages branch of abedegno/underworld-exhumed-web with the deploy key WEB_DEPLOY_KEY. By hand
+# (workflow_dispatch) it is a dry run unless push is set. It needs both private bundles.
+name: site
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      push:
+        description: push the site (off, a dry run that builds and checks it and pushes nothing)
+        type: boolean
+        default: false
+      skip_replays:
+        description: make web only, not make webcheck (the page checks still run)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+# one deploy at a time; a later one waits for the running one and then pushes last
+concurrency:
+  group: site
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: (vars.UW1_CI_ASSETS == 'true') && (github.event_name != 'release' || !github.event.release.prerelease)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    env:
+      PUSH: ${{ github.event_name == 'release' || inputs.push }}
+      SKIP_REPLAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_replays }}
+    steps:
+      # this commit's tree: the page, web/deploy.sh and the page checks; every tag, for the games'
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          submodules: true
+      - name: Each game's latest published release, checked out at its tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rels=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName,isDraft,isPrerelease \
+                   --jq '.[] | select((.isDraft or .isPrerelease) | not) | .tagName')
+          trees=
+          {
+            echo "### The site's builds"
+            echo
+            echo "| Game | Release | Commit |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for g in uw1 uw2; do
+            # the highest version of the game's final releases (GAME-vX.Y.Z, no -rc)
+            tag=$(printf '%s\n' "$rels" | grep -E "^$g-v[0-9]+\.[0-9]+\.[0-9]+\$" | sort -V | tail -n 1 || true)
+            [ -n "$tag" ] || { echo "::error::no published release of $g"; exit 1; }
+            sha=$(git rev-parse "refs/tags/$tag^{commit}")
+            git worktree add -q --detach "$RUNNER_TEMP/site-$g" "$sha"
+            git -C "$RUNNER_TEMP/site-$g" submodule update -q --init
+            echo "$g: $tag ($sha)"
+            echo "| $g | $tag | \`${sha:0:12}\` |" >> "$GITHUB_STEP_SUMMARY"
+            trees="$trees --$g-tree $RUNNER_TEMP/site-$g"
+          done
+          echo "SITE_TREES=$trees" >> "$GITHUB_ENV"
+      - name: System packages (the port's build, age for the bundles, and headless Chrome for the page checks)
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends clang ninja-build pkg-config age libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 libasound2t64 libxfixes3 >/dev/null
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Node packages and Chrome, for the page checks
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: |
+          npm ci --no-audit --no-fund --prefix exhume
+          npx --prefix exhume puppeteer browsers install chrome
+          # Ubuntu 24.04's AppArmor stops unprivileged user namespaces, which Chrome's sandbox
+          # needs: allow them on this runner, rather than run Chrome with no sandbox
+          sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0
+      # nothing in this job is cached: it holds a key that can write the site, and runs seldom
+      - name: Install Emscripten
+        run: EMSDK_VERSION=4.0.15 sh exhume/tools/setup-emsdk.sh
+      - name: Each game's libraries, from its own tree (SDL3 and libmt32emu for the desktop port and for WebAssembly, Nuked OPL3)
+        run: |
+          set -e
+          for g in uw1 uw2; do make -C "$RUNNER_TEMP/site-$g/$g" setup-libs setup-sound; done
+          # shellcheck source=/dev/null
+          . ~/emsdk/emsdk_env.sh >/dev/null 2>&1
+          for g in uw1 uw2; do (cd "$RUNNER_TEMP/site-$g/$g" && SETUP_WEB=1 sh ../exhume/tools/setup-libs.sh tools/libs-web); done
+      - uses: ./.github/actions/uw1-assets
+        with:
+          deploy-key: ${{ secrets.UW1_ASSETS_DEPLOY_KEY }}
+          age-key: ${{ secrets.UW1_ASSETS_AGE_KEY }}
+      - uses: ./.github/actions/uw2-assets
+        with:
+          deploy-key: ${{ secrets.UW2_ASSETS_DEPLOY_KEY }}
+          age-key: ${{ secrets.UW2_ASSETS_AGE_KEY }}
+      - name: web/deploy.sh
+        env:
+          WEB_DEPLOY_KEY: ${{ (github.event_name == 'release' || inputs.push) && secrets.WEB_DEPLOY_KEY || '' }}
+          # the site and the packer's copies of the game in $RUNNER_TEMP, removed by the last step
+          TMPDIR: ${{ runner.temp }}/site-tmp
+        run: |
+          set -eu
+          mkdir -p "$TMPDIR"
+          opts=
+          if [ "$PUSH" = true ]; then
+            [ -n "$WEB_DEPLOY_KEY" ] || { echo "::error::the secret WEB_DEPLOY_KEY is not set"; exit 1; }
+            key=$RUNNER_TEMP/web-deploy-key; hosts=$RUNNER_TEMP/web-known-hosts
+            (umask 077; printf '%s\n' "$WEB_DEPLOY_KEY" | tr -d '\r' > "$key")
+            # GitHub's published host key (api.github.com/meta), so the push trusts nothing else
+            echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$hosts"
+            export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$hosts -o StrictHostKeyChecking=yes"
+            # the site repository has its gh-pages branch already
+            opts="--push --replace"
+          fi
+          [ "$SKIP_REPLAYS" != true ] || opts="$opts --skip-replays"
+          # shellcheck disable=SC2086
+          sh web/deploy.sh $opts $SITE_TREES abedegno/underworld-exhumed-web "$UW1_DATA" "$UW2_DIR" "$MT32_ROMS"
+          if [ "$PUSH" = true ]; then
+            echo "Pushed to the gh-pages branch of abedegno/underworld-exhumed-web." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "A dry run: built and checked, nothing pushed." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          [ "$SKIP_REPLAYS" != true ] || echo "Without make webcheck (skip_replays)." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the key, the game data and everything built from it
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/web-deploy-key" "$RUNNER_TEMP/web-known-hosts" "$RUNNER_TEMP/site-tmp" "$RUNNER_TEMP/uw1-assets" "$RUNNER_TEMP/uw1-ci-assets" "$RUNNER_TEMP/uw1-assets-deploy-key" "$RUNNER_TEMP/uw2-assets" "$RUNNER_TEMP/uw2-ci-assets" "$RUNNER_TEMP/uw2-assets-deploy-key"
+          for g in uw1 uw2; do rm -rf "$RUNNER_TEMP/site-$g"; done
+          git worktree prune

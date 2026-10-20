@@ -34,6 +34,8 @@
 #   make test          the gate, the port, the quick fuzzing, every session against its golden
 #   make test-full     the long tier: goldens again from DOS, UBSan, drivers, deep fuzzing, coverage
 #   make verify        the sessions against their goldens, in the port
+#   make blackbox      the black box: a player's sessions recorded, staged and pruned as a
+#                      player's build does it (Exhume's tools/blackboxcheck.py, as make test runs it)
 #   make golden        every session's golden made again from DOS (twice, checked identical)
 #   make golden-check  every session replayed in DOS twice by the replay DOS build and compared
 #                      with its committed golden, writing nothing (needs no port)
@@ -68,7 +70,7 @@ PORT := $(PY) $(EXHUME)/tools
 
 .PHONY: game exact check check-all fast boot hooks repocheck help \
         setup-exhume setup-port setup-libs setup-sound port-check port port-debug port-release web webcheck package icons \
-        test test-full verify golden golden-check fuzz vectors coverage
+        test test-full verify blackbox golden golden-check fuzz vectors coverage
 .DEFAULT_GOAL := game
 
 game:
@@ -125,8 +127,8 @@ port-release:
 web:
 	@PATH="$(HOME)/emsdk:$(HOME)/emsdk/upstream/emscripten:$$PATH"; $(PY) tools/portbuild.py --config exhume.toml --web
 
-webcheck: web
-	@EXHUME_EXIT_AFTER=3600000 EXHUME_PORT=$(CURDIR)/build/web-node/uw1port $(PORT)/replay.py --config exhume.toml verify all
+webcheck: web port
+	@EXHUME_EXIT_AFTER=3600000 EXHUME_PORT=$(CURDIR)/build/web-node/uw1port EXHUME_CHEAT_PORT=$(CURDIR)/build/port/uw1port $(PORT)/replay.py --config exhume.toml verify all
 
 package:
 	@$(PORT)/package.py --config exhume.toml $(PACKAGE_ARGS)
@@ -142,6 +144,9 @@ test-full:
 
 verify:
 	@$(PORT)/replay.py --config exhume.toml verify all
+
+blackbox:
+	@$(PORT)/blackboxcheck.py --config exhume.toml
 
 golden:
 	@$(PORT)/replay.py --config exhume.toml golden all
