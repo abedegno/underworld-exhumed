@@ -223,6 +223,15 @@ Each entry was re-read against the source before it was written here, and each "
 - **Effect:** none.
 - **For a port:** nothing to do.
 
+### A broken object's debris keeps its spell
+
+- **What happens:** `remove_object` turns a destroyed object into a pile of debris by changing only its item number (`SET_ITEM`); the rest of the object stays, its enchantment included. An object that holds its spell itself, an is_quant object with the enchanted bit (an enchanted scroll or potion), so leaves debris that holds the same spell: `decode_obj_spell` finds it there as it did on the object, and `UseObj` ends every use with `checkSpell`, so using the debris casts it. Nothing spends it. `UseBook` and `UseFood` would have used the scroll or potion up, but debris is neither, and `useNSpellCharges` spends only a spell object's charges. So the debris casts the spell each time it is used, as often as the delay between casts from objects (0x2FD ticks) allows. An object that keeps its spell as a spell object among its contents loses it, since `remove_object` frees those contents (`Obj_FreeChain`).
+- **Where:** `remove_object` in [combat/DAMAGE.C](../src/combat/DAMAGE.C); `UseObj`, `checkSpell`, `decode_obj_spell`, `UseBook` and `UseFood` in [obj/USEITEMS.C](../src/obj/USEITEMS.C).
+- **Evidence:** code reading; both games. The game data reaches it: the shipped levels hold potions that carry their own spell from level 1 down and scrolls from level 2 down (is_quant, enchanted, bit 11 set, so `checkSpell` casts them). Seen in the port, which plays as DOS: the `plain-debris` enhanced session's recording, replayed without the enhancement, casts Light when the debris of a thrown scroll of Light is used.
+- **Confidence:** confirmed.
+- **Effect:** a player who breaks an enchanted scroll or potion, by throwing it at a wall until it breaks, say, gets debris that casts its spell for nothing, again and again, where the scroll or potion would have given it once.
+- **For a port:** matching DOS keeps it; the optional enhancement `plain-debris` takes the spell off the debris ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md)).
+
 ### Smaller slips with no known effect
 
 - **UW.CFG's card numbers are stored as words into bytes.** `seg014_1DC5_1D0D` reads each card number with `%d` straight into a byte global, so `sscanf` writes two bytes. The music card's high byte lands on `speech_card`, which the next line then reads; the speech card's high byte lands on the low byte of `music_driver` (the next in `_DATA`, by the matched data), turning its initial -1 into 0xFF00. `init_sounds` sets `music_driver` whenever there is a music card, and with none, music and effects are off before it is used. UW1 only: UW2 reads into `int` locals ([sound/SOUND.C](../src/sound/SOUND.C)).
