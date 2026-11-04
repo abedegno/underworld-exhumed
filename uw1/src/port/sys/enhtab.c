@@ -26,4 +26,6 @@ const struct enhance_flag enhance_table[ENH_COUNT] = {
     /* combat/DAMAGE.C's remove_object turns a broken object into debris keeping the spell it
        carried, so the debris casts it again and again for nothing; this takes the spell away */
     { "plain-debris", "An enchanted object that breaks loses its spell, so its debris casts nothing", ENH_FIX, NULL, NULL },
+    /* obj/USEITEMS.C's UseKeyOn: a key that does not fit tries the other keys carried */
+    { "key-ring", "A key that does not fit tries the other keys you carry, bags included, and locks or unlocks with the one that fits", ENH_GAMEPLAY, NULL, NULL },
 };

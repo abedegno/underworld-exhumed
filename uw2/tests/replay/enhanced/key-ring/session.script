@@ -1,0 +1,27 @@
+# key-ring: from the menu, load the saved game setup/key-ring writes (by the castle's locked
+# door at (15, 53), lock 28, with a key for lock 28 and a key for lock 3 in the pack); turn to
+# face the door (two steps of Shift+A, 22.5 degrees each), then use the key for lock 3 on the
+# door twice (left button on the key, right button on the door). With the flag the first use
+# unlocks the door with the key for lock 28 ("Another key unlocks the lock.") and the second
+# locks it again ("Another key locks the lock."); the original says "The key does not fit." to
+# both
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+8000 down shift
+8100 key a
+8300 up shift
+8800 down shift
+8900 key a
+9100 up shift
+10000 move 265 92      # the key for lock 3, used on the door
+10300 mdown 265 92 left
+10600 mup 265 92 left
+11800 move 122 100
+12100 mdown 122 100 right
+12400 mup 122 100 right
+14000 move 265 92      # and again
+14300 mdown 265 92 left
+14600 mup 265 92 left
+15800 move 122 100
+16100 mdown 122 100 right
+16400 mup 122 100 right
