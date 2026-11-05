@@ -66,6 +66,16 @@ def blackboxcheck():
                            os.path.join(EXHUME, 'examples', 'uw2', 'exhume.toml')], env=env).returncode
 
 
+def modcheck():
+    """The ports' mod settings (the repository's tools/modcheck.py: --start-level and
+    --start-square, a new game started with them and its replay), as enhcheck is run."""
+    sys.path.insert(0, here)
+    from exhume import EXHUME
+    env = dict(os.environ, UW2DECOMP=os.path.dirname(here))
+    return subprocess.run([PY, os.path.join(os.path.dirname(root), 'tools', 'modcheck.py'), '--config',
+                           os.path.join(EXHUME, 'examples', 'uw2', 'exhume.toml')], env=env).returncode
+
+
 def ailcheck():
     """The port's music drivers against the real .ADV files: each sound session replayed in the
     port with its logs, then tools/ailcheck.py (replay.py's driver_check)."""
@@ -93,7 +103,8 @@ def main(argv):
                   ('enhancements', enhcheck, 'port build'),
                   ('settings screen', setcheck, 'port build'),
                   ('player movement', movecheck, 'port build'),
-                  ('the black box', blackboxcheck, 'port build')]
+                  ('the black box', blackboxcheck, 'port build'),
+                  ('mod settings', modcheck, 'port build')]
     else:
         steps += [('port-debug build', tool('portbuild.py', '--debug'), None),
                   ('goldens from DOS, twice each', tool('replay.py', 'golden', 'all'), None),
@@ -105,6 +116,7 @@ def main(argv):
                   ('settings screen', setcheck, 'port build'),
                   ('player movement', movecheck, 'port build'),
                   ('the black box', blackboxcheck, 'port build'),
+                  ('mod settings', modcheck, 'port build'),
                   ('coverage report', tool('coverage.py'), 'port build')]
     results = []; failed = set(); t0 = time.time()
     for name, cmd, needs in steps:

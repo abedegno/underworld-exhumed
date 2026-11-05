@@ -39,7 +39,7 @@ The first run gets a Sound Blaster with FM music and digitised speech or effects
 
 **If something goes wrong,** [open an issue](https://github.com/abedegno/underworld-exhumed/issues/new/choose). Each play session's inputs are recorded to `recordings/` in the home folder (the newest five are kept). Zip the newest folder with the log beside it and attach it: it replays your session here exactly.
 
-Optional enhancements, all off by default, are listed in [docs/ENHANCEMENTS.md](docs/ENHANCEMENTS.md).
+Optional enhancements, all off by default, are listed in [docs/ENHANCEMENTS.md](docs/ENHANCEMENTS.md). Settings for mods of the original games (the level and square a new game starts on) are in [docs/MODDING.md](docs/MODDING.md).
 
 ### In a browser
 

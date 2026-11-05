@@ -32,6 +32,12 @@ void port_report_motion(void);          /* src/port/sys/c3dentry.c */
 
 int port_trace;
 extern int16_t rp_request;              /* the runtime's replay/replay.c: 0 off, 1 record, 2 replay */
+void port_mods_cl_start(const char *v);   /* sys/mods.c */
+void port_mods_cl_level(const char *v);
+int port_mods_init(const char *home, const char *replay);
+void port_mods_record(const char *home);
+void port_mods_features(FILE *f);
+const char *port_mods_error(void);
 
 void port_log(const char *fmt, ...)
 {
@@ -197,6 +203,12 @@ static const char help_text[] =
     "                         holding it or GOG's game.gog; found by itself when not given\n"
     "                         ($UW1PORT_DATA, the last folder used, GOG's install folders)\n"
     "  --home DIR             where saved games and settings go ($UW1PORT_HOME, else ~/.uw1port)\n"
+    "Mods (docs/MODDING.md; for a mod manager):\n"
+    "  --start-level N        a new game starts on level N (1 to 9; this run; start-level=\n"
+    "                         in the settings)\n"
+    "  --start-square X,Y     a new game starts on square X,Y (1 to 62; this run;\n"
+    "                         start-square= in the settings)\n"
+    "  --features             print what this build supports, and exit\n"
     "Enhancements and fixes (off by default; docs/ENHANCEMENTS.md):\n"
     "  --enhance NAME[,NAME]  turn on changes the original game does not have, or fixes for\n"
     "                         its faults, kept until changed; --enhance list lists them\n"
@@ -336,6 +348,7 @@ int main(int argc, char *argv[])
     const char *enh_on[16], *enh_off[16];   /* --enhance and --no-enhance lists, in order */
     int n_on = 0, n_off = 0, enh_list = 0;
     int settings_list = 0;
+    int features = 0;                   /* --features: what this build plays (sys/mods.c) */
     int cl_scale = 0, cl_aspect = 0, cl_integer = 0;   /* given on the command line: the settings file does not override them */
     const char *input_script = NULL;    /* --input-script: keys and mouse at set times (inscript.c) */
     static char spec_buf[16];
@@ -392,6 +405,9 @@ int main(int argc, char *argv[])
         else if (!strcmp(a, "--ail-log") && i + 1 < argc) ail_log = argv[++i];
         else if (!strcmp(a, "--hw-log") && i + 1 < argc) hw_log = argv[++i];
         else if (!strcmp(a, "-v")) port_trace = 1;
+        else if (!strcmp(a, "--start-square") && i + 1 < argc) port_mods_cl_start(argv[++i]);
+        else if (!strcmp(a, "--start-level") && i + 1 < argc) port_mods_cl_level(argv[++i]);
+        else if (!strcmp(a, "--features")) features = 1;
         else if (!strcmp(a, "--help") || !strcmp(a, "-h")) usage(1);
         else if (a[0] == '-' && a[1] == '-') usage(0);
         /* a folder or file dropped on the program's icon (Windows, Linux) arrives as an argument */
@@ -405,6 +421,10 @@ int main(int argc, char *argv[])
     enhance_init(enhance_table, ENH_COUNT, "UW1");
     if (enh_list) {
         enhance_list(stdout);
+        return 0;
+    }
+    if (features) {
+        port_mods_features(stdout);
         return 0;
     }
     /* a bad input script stops the run before anything is written; its cheat lines (a test's,
@@ -433,6 +453,11 @@ int main(int argc, char *argv[])
     if (!data && !(data = find_data(home, interactive, data_buf, sizeof data_buf))) return 1;
     if (plat_files_init(data, home)) {
         fprintf(stderr, "uw1port: %s is not a directory (give the UW1 directory with --data)\n", data);
+        return 1;
+    }
+    /* a mod's start level and square (sys/mods.c), checked before anything else is read */
+    if (port_mods_init(home, replay)) {
+        if (interactive) plat_message(1, "Ultima Underworld: a mod cannot be used", port_mods_error());
         return 1;
     }
     if (plat_resolve("UW.EXE", PLAT_READ, exe, sizeof exe) || port_load_exe(exe)) {
@@ -525,6 +550,7 @@ int main(int argc, char *argv[])
     vga_window_init();
     if (rp_request != 1 && rp_request != 2) rp_request = 0;   /* the port reads the world */
     if (interactive && recording && rp_request == 0) port_blackbox_start(home);
+    port_mods_record(home);             /* the mods beside the recording (sys/mods.c) */
     if (replay && copy_to_home(replay, home, "REPLAY.IN")) return 1;
     if (sound && write_uw_cfg(sound)) return 1;
     audio_config(wav, roms, audio_device && !cfg.hidden);

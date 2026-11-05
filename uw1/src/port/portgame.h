@@ -88,4 +88,14 @@ enum { ENH_SKIP_INTRO, ENH_WRAP_MENU, ENH_FAST_PANELS, ENH_FREE_HEADING, ENH_SUB
 #define PORT_KEY_LSHIFT 0xBF
 int port_pitch_bound(void);                 /* game/PLAYER.C: the pitch's bound either way */
 
+/* sys/mods.c: what a mod for the original game sets in its executable, given to the port
+   (--start-level, --start-square, --features; docs/MODDING.md). ui/MAINMENU.C asks for the start
+   level and square, and says where it put the player. */
+int port_start_square(int axis, int dflt);
+int port_start_level(int dflt);
+void port_start_placed(int level, int x, int y, int nx, int ny, int found);
+#define PORT_NUM_LEVELS 9           /* the start levels a mod may give (map.h's NUM_LEVELS) */
+#define PORT_LEVARK_OFFSETS 2        /* where LEV.ARK's block offsets start (docs/FORMATS.md) */
+int port_mods_active(void);
+
 #endif
