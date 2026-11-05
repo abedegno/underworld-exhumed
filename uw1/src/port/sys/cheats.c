@@ -23,7 +23,9 @@
      set FIELD VALUE         hp (1 to the maximum), mana (0 to the maximum), str, dex, int (1 to
                              99, then player_compute: the maxima, carrying weight str * 20 among
                              them, as a level gained does), or a skill by name (0 to 30; enum
-                             Skill, lower case: attack, defense ... swimming)
+                             Skill, lower case: attack, defense ... swimming); or weight, the
+                             carried weight as the player record keeps it (0 to 65535, in
+                             tenths of a stone; not worked out from the inventory)
 
    The numbers are checked when the script is read; what depends on the game (a free object, a
    free square) when the cheat runs, which then says what failed and changes nothing. */
@@ -130,6 +132,14 @@ static const char *c_set(int argc, char *argv[], int run)
         panel_check_hpmp();
         return NULL;
     }
+    /* the carried weight as the player record keeps it, a running total that nothing works out
+       again from the inventory: a saved game edited elsewhere can hold any value, and a drop
+       from a weight below the object's then wraps it past 0 */
+    if (!strcmp(argv[0], "weight")) {
+        if (cheat_num(argv[1], 0, 65535, &v)) return "a value 0 to 65535";
+        if (run) player->weight = (uint16)v;
+        return NULL;
+    }
     k = !strcmp(argv[0], "str") ? ATTR_STR : !strcmp(argv[0], "dex") ? ATTR_DEX : !strcmp(argv[0], "int") ? ATTR_INT : -1;
     if (k >= 0) {
         if (cheat_num(argv[1], 1, 99, &v)) return "a value 1 to 99";
@@ -138,7 +148,7 @@ static const char *c_set(int argc, char *argv[], int run)
     } else {
         for (k = 0; k < NUM_SKILLS; k++)
             if (!strcmp(argv[0], skill_names[k])) break;
-        if (k == NUM_SKILLS) return "hp, mana, str, dex, int or a skill (attack, defense ... swimming)";
+        if (k == NUM_SKILLS) return "hp, mana, str, dex, int, a skill (attack, defense ... swimming) or weight";
         if (cheat_num(argv[1], 0, 30, &v)) return "a value 0 to 30";
         if (!run) return NULL;
         player->skills[k] = (unsigned char)v;

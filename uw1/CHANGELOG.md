@@ -2,6 +2,10 @@
 
 For players. Each release's notes are drafted from here. Releases are tagged `uw1-vX.Y.Z`.
 
+## Unreleased
+
+- **Fixed:** with a carried weight that had gone wrong (a saved game edited elsewhere can hold 0 while the pack is full), dropping something showed a large negative number as the weight you can still carry, and the game then refused everything you tried to pick up as too heavy. DOS works these out in 16 bits, where the weight wraps round, so it showed a sensible number and let you pick things up; the port worked them out in 32 bits. It now does as DOS does, there and in the three other places that read the carried weight (catching a fish, the load while swimming, and how fast a heavily laden player walks).
+
 ## 1.0.2 (14 October 2026)
 
 - **Fixed:** creating a female character crashed the game on choosing any portrait but the first (issue 8). DOS draws her; the port now does too.

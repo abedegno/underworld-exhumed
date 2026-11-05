@@ -466,7 +466,9 @@ int far ItemWeight(struct Object far *obj)
 /* True if the player can carry obj as well without going over max_weight. */
 unsigned char far EncumCheck(struct Object far *obj)
 {
-    if (ItemWeight(obj) + PlayerDat.rec.weight > PlayerDat.rec.max_weight)
+    /* an unsigned int, as Turbo C's (int + unsigned): a sum past FFFFh wraps, where the
+       host's int kept it */
+    if ((uint16)(ItemWeight(obj) + PlayerDat.rec.weight) > PlayerDat.rec.max_weight)
         return 0;
     return 1;
 }

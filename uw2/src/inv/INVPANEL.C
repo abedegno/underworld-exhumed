@@ -867,7 +867,9 @@ char far displayEnc(char show)
     register int left;
 
     drawn = 0;
-    left = PlayerDat.rec.max_weight - PlayerDat.rec.weight;
+    /* 16 bits, as Turbo C's: a carried weight above the maximum, or one wrapped below 0 (a
+       drop from a weight of 0), wraps here, where the host's int went negative */
+    left = (int16)(PlayerDat.rec.max_weight - PlayerDat.rec.weight);
     if (shown_capacity != left) {
         restore_rect(SaveHandles[0]);
         shown_capacity = left;

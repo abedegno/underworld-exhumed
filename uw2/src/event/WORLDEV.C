@@ -537,7 +537,7 @@ unsigned char far go_fish(void)
         goto bad_place;
     if (rand() % 5 > (player->skills[SKILL_TRACK] + 7) / 8)
         goto no_luck;
-    if (player->weight + ComObjData[ITEM_FISH].mass
+    if ((uint16)(player->weight + ComObjData[ITEM_FISH].mass)   /* 16 bits, as Turbo C's */
         >= player->max_weight)
         goto no_room;
     game_sprint(0x70);  /* 'You catch a lovely fish.' */

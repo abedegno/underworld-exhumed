@@ -1,0 +1,26 @@
+# weightwrap: recorded by the port from this script (no cheats, so format 4, which DOS replays),
+# from the saved game setup/weightless writes; its golden is DOS's replay of that recording.
+# "Journey Onward" and slot I (a carried weight of 0, as an edited saved game can hold it, with
+# a taper in the pack and a shortsword at the player's feet). The taper dragged from the pack and
+# let go high in the view, thrown: the weight goes 0 - 4, which wraps to 65532 (FFFCh), and the
+# panel's capacity, max_weight - weight in 16 bits, is 500 - 65532 = 504, shown as 50, where the
+# port's int made it -65032, shown as -6503. Then 1 twice (look down), F3 (get), and the sword
+# taken with the right button and let go over the pack's first slot: EncumCheck's 16 + 65532
+# wraps to 12, within the 500 the player can carry, so DOS takes it (the weight wraps back to 12,
+# the panel 48), where the port's int made it 65548 and refused it as too heavy
+9000 key esc
+12000 key enter
+15000 key enter
+19000 move 250 92      # the taper, the pack's first slot on show
+19300 mdown 250 92 left
+19600 move 200 80
+19900 move 140 60
+20200 mup 140 60 left  # let go high in the view: thrown
+23000 key 1            # look down, twice
+24000 key 1
+25500 key f3           # get
+26500 move 156 102
+26800 mdown 156 102 right   # the shortsword, onto the cursor
+27100 move 170 110
+27400 move 250 92
+27700 mup 250 92 right    # into the pack's first slot

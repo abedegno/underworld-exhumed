@@ -481,6 +481,8 @@ All 87 calls without a prototype that were left after step 1 have one, as descri
 - unsigned 16-bit results that DOS compares or shifts as unsigned and that can go below 0: a light's quality minus 1 in PLAYTIME.C (at quality 0 DOS takes the large unsigned value), a tile's height minus 1 in WORLDEV.C and in three slope tests in VIEW3D.C (at height 0), CUTS.C's frame and page counts minus 1 in three places, and TMPALLOC.C's EMS page count;
 - GRDB.C's `loc[lab] == (uint16)-1`, where `loc` became `uint16` in step 4 and the host would compare 65535 with -1.
 
+Later, from the UW1 port (its docs/PORT.md, "The carried weight in 16 bits"): the five reads of the player record's carried weight, a `uint16` that a drop takes below 0 when the record holds less than the pack does (an edited saved game), are cast to 16 bits: INVPANEL.C's `displayEnc`, INVDATA.C's `EncumCheck`, WORLDEV.C's fish catch, PLAYTIME.C's swimming load and PHYSICS.C's slowdown test. UW1's `weightwrap` session, judged by DOS, covers the same code there; no UW2 session reaches it.
+
 The final run lists 1,867 sites, by where the value goes and why it can differ:
 
 | Category | Overflow | Signedness |

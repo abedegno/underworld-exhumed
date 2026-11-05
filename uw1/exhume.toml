@@ -236,7 +236,7 @@ saves = ["SAVE1", "SAVE2", "SAVE3", "SAVE4"]
 shared_opts = "-mm -1 -G -O -Y -d"     # replay.c in the replay DOS build, as UW2's
 # the replay DOS build's link: the modding build, to which replay.py adds --out, --obj, --add
 link = "{python} tools/link.py --mod --config {config}"
-order = ["newgame", "walk", "sound", "soundfm", "soundmt", "items", "talk", "load", "intro", "savecursor", "female", "fallrestore", "tooheavy", "fallpause", "overpay", "powerkill"]
+order = ["newgame", "walk", "sound", "soundfm", "soundmt", "items", "talk", "load", "intro", "savecursor", "female", "fallrestore", "tooheavy", "fallpause", "overpay", "powerkill", "weightwrap"]
 c0_signature_at = 8                    # DS:8, after DS:0..3 (an overlay stub's tail) and C0's DS:4..7
 # tooheavy starts from the saved game setup/tidy-heavy writes: a port-made setup session whose
 # script uses a test's cheats (recording format 6), which only the port replays, so its saved
@@ -245,8 +245,9 @@ c0_signature_at = 8                    # DS:8, after DS:0..3 (an overlay stub's 
 # (tests/replay/NAME.script; no cheats, so format 4, which DOS replays), and have no steps here:
 # js-dos runs the game flat out, at which a walking player hardly moves, and its steps cannot
 # drag the mouse. Their goldens are DOS's replays all the same; overpay and powerkill start
-# from setup sessions, as tooheavy does
-stage_from = { load = "items", tooheavy = "setup/tidy-heavy", fallpause = "fallrestore", overpay = "setup/trader", powerkill = "setup/headless" }
+# from setup sessions, as tooheavy does. weightwrap was made the same way, from setup/weightless
+# (a carried weight of 0, as an edited saved game can hold it): a drop, and a pick-up
+stage_from = { load = "items", tooheavy = "setup/tidy-heavy", fallpause = "fallrestore", overpay = "setup/trader", powerkill = "setup/headless", weightwrap = "setup/weightless" }
 # the port's driver logs, and the real drivers run against them (Exhume's tools/ailcheck.py)
 port_sound_logs = ["--ail-log", "--hw-log"]
 driver_check = "{python} {exhume}/tools/ailcheck.py --config {config} {ail} {hw}"
@@ -341,6 +342,7 @@ tooheavy = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 fallpause = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 overpay = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 powerkill = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
+weightwrap = "0 -1 -1 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 sound = "3 7 220 1 sound\r\n1 7 220 1 speech\r\n0 cuts\r\n"
 soundfm = "3 7 220 1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
 soundmt = "6 2 330 -1 sound\r\n0 -1 -1 -1 speech\r\n0 cuts\r\n"
