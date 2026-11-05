@@ -648,7 +648,8 @@ fallrestore = [
 
 [test]
 # Exhume's tools/test.py tiers: its default steps (the ones UW2 uses), with UW1's map notes check
-# after the black box (tools/notescheck.py: a note with no 0 in its 50 bytes, issue 7)
+# after the black box (tools/notescheck.py: a note with no 0 in its 50 bytes, issue 7) and the
+# arrival on level 9 (tools/voidcheck.py: the Slasher's null target)
 fast = [
     ["the gate", "{python} {exhume}/tools/gate.py --config {config} check"],
     ["port build", "{python} {exhume}/tools/portbuild.py --config {config}"],
@@ -659,6 +660,7 @@ fast = [
     ["player movement", "{python} {exhume}/tools/movecheck.py --config {config}", "port build"],
     ["the black box", "{python} {exhume}/tools/blackboxcheck.py --config {config}", "port build"],
     ["map notes", "{python} tools/notescheck.py --config {config}", "port build"],
+    ["the void", "{python} tools/voidcheck.py --config {config}", "port build"],
 ]
 full = [
     ["the gate", "{python} {exhume}/tools/gate.py --config {config} check"],
@@ -674,5 +676,6 @@ full = [
     ["player movement", "{python} {exhume}/tools/movecheck.py --config {config}", "port build"],
     ["the black box", "{python} {exhume}/tools/blackboxcheck.py --config {config}", "port build"],
     ["map notes", "{python} tools/notescheck.py --config {config}", "port build"],
+    ["the void", "{python} tools/voidcheck.py --config {config}", "port build"],
     ["coverage report", "{python} {exhume}/tools/coverage.py --config {config}", "port build"],
 ]

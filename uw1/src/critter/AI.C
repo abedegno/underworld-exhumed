@@ -1330,13 +1330,17 @@ do_goal:
 char far set_up_target(void)
 {
     mytarget = Obj_IntTMem(OBJ_GTARG(meptr));
-    if (mytarget->hp <= 0)
+    /* the target is 0 for level 9's Slasher of Veils, whose goal in the level is 3 (follow)
+       with no target: Obj_IntTMem gives a null pointer and DOS reads the interrupt vector
+       table at 0000:0000 as the target. Its "hp" (int 2's offset, F4h in DOSBox) is not 0,
+       so the Slasher follows a target at the tile int 5's segment (F000h) makes, (60, 0) */
+    if (FARNULLTRAP(mytarget)->hp <= 0)
         return 0;
-    txpos = OBJ_HOMEX(mytarget);
-    typos = OBJ_HOMEY(mytarget);
-    tzpos = OBJ_Z(mytarget) >> 3;
-    txpost = (txpos << 3) + OBJ_FINEX(mytarget);
-    typost = (typos << 3) + OBJ_FINEY(mytarget);
+    txpos = OBJ_HOMEX(FARNULLTRAP(mytarget));
+    typos = OBJ_HOMEY(FARNULLTRAP(mytarget));
+    tzpos = OBJ_Z(FARNULLTRAP(mytarget)) >> 3;
+    txpost = (txpos << 3) + OBJ_FINEX(FARNULLTRAP(mytarget));
+    typost = (typos << 3) + OBJ_FINEY(FARNULLTRAP(mytarget));
     tdx = txpost - myxpost;
     tdy = typost - myypost;
     tdistsqr = (txpos - myxpos) * (txpos - myxpos) + (typos - myypos) * (typos - myypos);
