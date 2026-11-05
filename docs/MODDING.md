@@ -1,11 +1,11 @@
 # Mods
 
-Some mods for the original games change bytes of the executable (`UW.EXE`, `UW2.EXE`), such as
-the level and square a new game starts on. The ports cannot take such an executable: they run
-their own compiled code, and they check that the executable is the GOG release's before reading
-its data (`src/port/mem/fardata.c`). So a mod manager gives the ports the same settings another
-way. Everything here is port-only and off unless set; with nothing
-set, the game is exactly as before.
+Some mods for the original games might want to change bytes of the executable (`UW.EXE`,
+`UW2.EXE`), such as the level and square a new game starts on or the 3D models. The ports cannot
+take such an executable: they run their own compiled code, and they check that the executable
+is the GOG release's before reading its data (`src/port/mem/fardata.c`). So a mod manager gives
+the ports the same settings another way. Everything here is port-only and off unless set; with
+nothing set, the game is exactly as before.
 
 Other files of a mod need nothing new: a file in the port's home folder is read in place of the
 game's own (the home folder is laid over the game folder, Exhume's `runtime/port/platform/files.c`),
