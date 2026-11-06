@@ -2,7 +2,7 @@
 
 For players. Each release's notes are drafted from here. Releases are tagged `uw1-vX.Y.Z`.
 
-## Unreleased
+## 1.0.3 (unreleased)
 
 - **Fixed:** the port stopped with a host fault as soon as the player arrived in the Ethereal Void (level 9) after destroying the last talisman, so the game could not be finished. The Slasher of Veils there is set to follow a target it does not have, and the original reads that target from memory a DOS program does not own; the port now reads what DOS reads there, so the Slasher does as it did in DOS.
 - **Fixed:** with a carried weight that had gone wrong (a saved game edited elsewhere can hold 0 while the pack is full), dropping something showed a large negative number as the weight you can still carry, and the game then refused everything you tried to pick up as too heavy. DOS works these out in 16 bits, where the weight wraps round, so it showed a sensible number and let you pick things up; the port worked them out in 32 bits. It now does as DOS does, there and in the three other places that read the carried weight (catching a fish, the load while swimming, and how fast a heavily laden player walks).

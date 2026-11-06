@@ -2,7 +2,7 @@
 
 For players. Each release's notes are drafted from here. Releases are tagged `uw2-vX.Y.Z` (before the move to Underworld Exhumed, `vX.Y.Z`).
 
-## Unreleased
+## 1.2.4 (unreleased)
 
 - **Fixed:** with a carried weight that had gone wrong (a saved game edited elsewhere can hold 0 while the pack is full), dropping something could show a large negative number as the weight you can still carry, and the game then refused everything you tried to pick up as too heavy. DOS works these out in 16 bits, where the weight wraps round; the port worked them out in 32 bits. It now does as DOS does, there and in the three other places that read the carried weight (catching a fish, the load while swimming, and how fast a heavily laden player walks). Found in the UW1 port, whose code here is the same.
 - **Changed:** the optional changes that correct a fault of the original game are now called fixes and kept apart from the enhancements: restore-at-rest is on a new Fixes tab of the settings screen, listed after the enhancements by `--enhance list` and logged on a `fix:` line of their own. They are turned on as before (`--enhance NAME`), and a settings file that already has one on keeps it.
