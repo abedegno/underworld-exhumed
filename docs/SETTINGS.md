@@ -63,6 +63,8 @@ One switch for each enhancement the game has, all off by default. The selected o
 
 One switch for each fix the game has, all off by default: changes that correct a fault of the original game, each marked "changes play". They are kept with the enhancements, in the same `enhance=` list, and turned on in the same way. What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md#fixes). UW1 has two (`tidy-objects` and `restore-at-rest`), UW2 one (`restore-at-rest`).
 
+![The Fixes tab](img/settings-fixes.png)
+
 | Option | What it does | Settings-file key | When | Command line |
 |---|---|---|---|---|
 | each fix | turns it on or off | `enhance=`, with the enhancements | next start | `--enhance NAME[,NAME]` and `--no-enhance NAME` (kept); `--enhance list` lists them after the enhancements |
