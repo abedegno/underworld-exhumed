@@ -1,0 +1,31 @@
+# plain-debris: from the menu, load the saved game setup/plain-debris writes (a new character
+# with a scroll of Light of quality 1 in the pack's first slot, facing a wooden wall); drag the
+# scroll out of the pack with the right button into the view, which throws it at the wall and
+# breaks it; look down twice and at the pile of debris it leaves; drag the debris into the
+# pack's first slot with the right button and use it there twice (the left button). With the
+# fix the debris casts nothing. Without it (the original, the same recording with its
+# enhancements chunk naming skip-intro alone) the first use casts Light and the second is
+# refused, "You are not yet ready to cast another spell"
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+9000 move 245 93       # the scroll, the pack's first slot
+9300 mdown 245 93 right
+9600 move 200 85
+9900 move 150 75
+10200 move 110 65      # into the view: thrown at the wall, which breaks it
+10500 mup 110 65 right
+13000 key 1            # look down, twice
+13800 key 1
+16000 move 128 113     # the debris on the carpet: "You see a pile of debris"
+16300 mdown 128 113 right
+16500 mup 128 113 right
+18000 move 128 113     # the debris, dragged into the pack's first slot
+18300 mdown 128 113 right
+18600 move 190 100
+18900 move 245 93
+19200 mup 245 93 right
+21000 mdown 245 93 left    # used, twice
+21200 mup 245 93 left
+23000 mdown 245 93 left
+23200 mup 245 93 left
+25000 move 110 100

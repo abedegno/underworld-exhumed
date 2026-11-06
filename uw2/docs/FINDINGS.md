@@ -314,10 +314,10 @@ The others are not reached by any of the eight recorded sessions, which cover th
 
 - **What happens:** `remove_object` turns a destroyed object into debris by changing only its item number (`SET_ITEM`); the rest of the object stays, its enchantment included. An object that holds its spell itself, an is_quant object with the enchanted bit (an enchanted scroll or potion), so leaves debris that holds the same spell: `decode_obj_spell` finds it there as it did on the object, and `UseObj` ends every use with `checkSpell`, so using the debris casts it. Nothing spends it: `UseBook` and `UseFood` would have used the scroll or potion up, but debris is neither, and `useNSpellCharges` spends only a spell object's charges. So the debris casts the spell each time it is used, as often as the delay between casts from objects (0x2FD ticks) allows. Unlike UW1, a weapon has a branch of its own: it breaks into the broken dagger or its skill's broken weapon and keeps its contents, so a spell object among them stays on the broken weapon too. Other objects with contents have them freed (`Obj_FreeChain`).
 - **Where:** `remove_object` in [combat/DAMAGE.C](../src/combat/DAMAGE.C); `UseObj`, `checkSpell` and `decode_obj_spell` in [obj/OBJUSE.C](../src/obj/OBJUSE.C); `UseBook` and `UseFood` in [obj/USEITEMS.C](../src/obj/USEITEMS.C).
-- **Evidence:** code reading; both games. In UW1 the shipped levels reach it and the port shows it in play ([UW1's FINDINGS](../../uw1/docs/FINDINGS.md#a-broken-objects-debris-keeps-its-spell)); UW2's levels have not been searched for such objects, nor has it been played here.
-- **Confidence:** likely.
+- **Evidence:** code reading; both games. In UW1 the shipped levels reach it and the port shows it in play ([UW1's FINDINGS](../../uw1/docs/FINDINGS.md#a-broken-objects-debris-keeps-its-spell)); in UW2 the port shows it too: the `plain-debris` session's recording, replayed without the fix, casts Light when the debris of a thrown scroll of Light is used. UW2's levels have not been searched for such objects.
+- **Confidence:** confirmed.
 - **Effect:** a player who breaks an enchanted scroll or potion gets debris that casts its spell for nothing, again and again, where the scroll or potion would have given it once.
-- **For a port:** matching DOS keeps it; the optional enhancement `plain-debris` takes the spell off the debris, a broken weapon's spell object included ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md)).
+- **For a port:** matching DOS keeps it; the optional fix `plain-debris` takes the spell off the debris, a broken weapon's spell object included ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md)).
 
 ### Smaller slips with no known effect
 

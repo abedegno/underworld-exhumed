@@ -1,0 +1,36 @@
+# plain-debris: the saved game the plain-debris session starts from. A new character, as the
+# newgame session makes one (every default, the name avatar); then a test's cheat
+# (EXHUME_TEST_CHEATS=1; recording format 6): a scroll of Light (0x134, spell 5: block 6 string
+# 0x105, as LOOK.C names it) of quality 1, as a level stores an enchanted scroll, into the
+# pack, so that one throw at a wall breaks it. Saved in slot 1, described "debris"
+14000 key esc
+16500 key esc
+20000 key enter        # Create Character
+24000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+26000 key enter        # the difficulty
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key enter
+36000 key enter
+38000 key enter
+40000 key a            # the name
+40200 key v
+40400 key a
+40600 key t
+40800 key a
+41000 key r
+42000 key enter
+44000 key enter        # Yes
+52000 cheat give 0x134 1 1 spell 5
+55000 down ctrl        # save: Ctrl+S, slot 1, "debris"
+55100 key s
+55300 up ctrl
+57000 key enter
+58500 key d
+58700 key e
+58900 key b
+59100 key r
+59300 key i
+59500 key s
+61500 key enter
