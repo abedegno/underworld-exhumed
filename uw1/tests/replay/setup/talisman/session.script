@@ -1,0 +1,42 @@
+# talisman: the saved game the void session (DOS's golden) starts from. A new character, as
+# the newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): one talisman left to destroy and Garamon buried
+# (talisman_ok), a taper (0x93, a talisman: fate 10) into the pack, and the player moved to
+# level 8, (31,30), on the walkway of the chamber at the centre of the level, facing north
+# over its lava pit. Saved in slot I, described "talisman"
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat set talismans 1
+44100 cheat set talisman_ok 1
+44200 cheat give 0x93
+44300 cheat goto 8 31 30
+47000 down ctrl        # save: Ctrl+S, slot I, "talisman"
+47100 key s
+47300 up ctrl
+49000 key enter
+50500 key t
+50700 key a
+50900 key l
+51100 key i
+51300 key s
+51500 key m
+51700 key a
+51900 key n
+53000 key enter

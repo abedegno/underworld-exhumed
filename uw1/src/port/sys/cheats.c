@@ -23,7 +23,9 @@
      set FIELD VALUE         hp (1 to the maximum), mana (0 to the maximum), str, dex, int (1 to
                              99, then player_compute: the maxima, carrying weight str * 20 among
                              them, as a level gained does), or a skill by name (0 to 30; enum
-                             Skill, lower case: attack, defense ... swimming)
+                             Skill, lower case: attack, defense ... swimming); or the ending's
+                             talismans (left to destroy, 1 to 8) and talisman_ok (0 or 1, set
+                             when Garamon is buried)
 
    The numbers are checked when the script is read; what depends on the game (a free object, a
    free square) when the cheat runs, which then says what failed and changes nothing. */
@@ -130,6 +132,19 @@ static const char *c_set(int argc, char *argv[], int run)
         panel_check_hpmp();
         return NULL;
     }
+    /* the ending's two fields: the talismans left to destroy (1 to 8; 0 is the game won, which
+       check_victory acts on at once) and talisman_ok, which burying Garamon sets
+       (UseBonesOn) and without which a talisman thrown into the lava is not destroyed */
+    if (!strcmp(argv[0], "talismans")) {
+        if (cheat_num(argv[1], 1, 8, &v)) return "a value 1 to 8";
+        if (run) player->talismans = (unsigned char)v;
+        return NULL;
+    }
+    if (!strcmp(argv[0], "talisman_ok")) {
+        if (cheat_num(argv[1], 0, 1, &v)) return "0 or 1";
+        if (run) player->talisman_ok = (uint16)v;
+        return NULL;
+    }
     k = !strcmp(argv[0], "str") ? ATTR_STR : !strcmp(argv[0], "dex") ? ATTR_DEX : !strcmp(argv[0], "int") ? ATTR_INT : -1;
     if (k >= 0) {
         if (cheat_num(argv[1], 1, 99, &v)) return "a value 1 to 99";
@@ -138,7 +153,7 @@ static const char *c_set(int argc, char *argv[], int run)
     } else {
         for (k = 0; k < NUM_SKILLS; k++)
             if (!strcmp(argv[0], skill_names[k])) break;
-        if (k == NUM_SKILLS) return "hp, mana, str, dex, int or a skill (attack, defense ... swimming)";
+        if (k == NUM_SKILLS) return "hp, mana, str, dex, int, a skill (attack, defense ... swimming), talismans or talisman_ok";
         if (cheat_num(argv[1], 0, 30, &v)) return "a value 0 to 30";
         if (!run) return NULL;
         player->skills[k] = (unsigned char)v;

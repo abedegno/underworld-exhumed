@@ -2,6 +2,10 @@
 
 For players. Each release's notes are drafted from here. Releases are tagged `uw1-vX.Y.Z`.
 
+## Unreleased
+
+- **Fixed:** the port stopped with a host fault as soon as the player arrived in the Ethereal Void (level 9) after destroying the last talisman, so the game could not be finished. The Slasher of Veils there is set to follow a target it does not have, and the original reads that target from memory a DOS program does not own; the port now reads what DOS reads there, so the Slasher does as it did in DOS.
+
 ## 1.0.2 (14 October 2026)
 
 - **Fixed:** creating a female character crashed the game on choosing any portrait but the first (issue 8). DOS draws her; the port now does too.

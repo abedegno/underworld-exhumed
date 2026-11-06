@@ -1,0 +1,20 @@
+# void: tools/voidcheck.py's session (not a DOS golden: below), recorded by the port from this
+# script (no cheats, format 4) from the saved game setup/talisman writes. "Journey Onward" and
+# slot I (the player on level 8's central walkway, facing its lava pit, the last talisman, a
+# taper, in the pack); the taper dragged from the pack into the view and let go high, which
+# throws it into the lava. It burns (talisman_ok), the talismans left reach 0, and check_victory
+# opens a moongate, the Slasher of Veils is dragged through it and the player follows to level 9
+# (27,23). There the Slasher's goal is 3 (follow) with no target, so AI.C's set_up_target reads
+# the target through a null far pointer: DOS reads the interrupt vector table, and the Slasher
+# jumps towards the tile it makes, (60,0), landing at (57,2); the port stopped there with a host
+# fault. DOS (js-dos) replays it to the same end, but the target's height comes from int 0's
+# segment, the program's load segment plus 1DEAh, which differs between js-dos, DOSBox-X and the
+# port, and a checkpoint taken while the Slasher climbs to it differs: no one golden fits
+9000 key esc
+12000 key enter
+15000 key enter
+19000 move 250 92      # the taper, the pack's first slot on show
+19300 mdown 250 92 left
+19600 move 200 80
+19900 move 140 60
+20200 mup 140 60 left  # let go high in the view: thrown
