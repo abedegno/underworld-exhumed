@@ -197,7 +197,7 @@ void far sink_sink_sink(void)
 
     load = 0;
     if (player->max_weight != 0)
-        load += (player->weight << 5) / player->max_weight;
+        load += (uint16)(player->weight << 5) / player->max_weight;   /* 16 bits, as Turbo C's */
     if ((skill = skill_check(player->skills[SKILL_SWIMMING], load)) < 1 && player->swim_count < 0x8C)
         player->swim_count += rollem(3 - skill, 4);
     if (player->swim_count > 0x78)

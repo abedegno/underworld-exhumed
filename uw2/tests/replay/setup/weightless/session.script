@@ -1,0 +1,42 @@
+# weightless: the saved game the weightwrap session (DOS's golden) starts from. A new character,
+# as the newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): a candle (0x092) into the pack, a shortsword
+# (0x004) at the player's feet, and the carried weight set to 0, as a saved game edited
+# elsewhere can hold it while the pack holds the candle. Saved in slot 1, described "weightless"
+14000 key esc
+16500 key esc
+20000 key enter        # Create Character
+24000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+26000 key enter        # the difficulty
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key enter
+36000 key enter
+38000 key enter
+40000 key a            # the name
+40200 key v
+40400 key a
+40600 key t
+40800 key a
+41000 key r
+42000 key enter
+44000 key enter        # Yes
+52000 cheat give 0x092
+52100 cheat give 0x004 drop
+52200 cheat set weight 0
+55000 down ctrl        # save: Ctrl+S, slot 1, "weightless"
+55100 key s
+55300 up ctrl
+57000 key enter
+58500 key w
+58700 key e
+58900 key i
+59100 key g
+59300 key h
+59500 key t
+59700 key l
+59900 key e
+60100 key s
+60300 key s
+61500 key enter

@@ -593,7 +593,8 @@ int far ItemFitsSlot(struct Object far *obj, int slot)
             if (slot > 19) {
                 for (bag = OpenBag; bag != 0; bag = bag->prev) {
                     cap = Containers[Obj_PtrTMem(&bag->obj)->id & ID_INCLASS].capacity;
-                    ok &= cap == 0 || bag->weight + weight <= cap;
+                    /* 16 bits, as Turbo C's: past 32767 the sum goes negative and fits */
+                    ok &= cap == 0 || (int16)(bag->weight + weight) <= cap;
                 }
             }
             BagWeight(&cont->ol.link, &weight);
@@ -867,7 +868,9 @@ char far displayEnc(char show)
     register int left;
 
     drawn = 0;
-    left = PlayerDat.rec.max_weight - PlayerDat.rec.weight;
+    /* 16 bits, as Turbo C's: a carried weight above the maximum, or one wrapped below 0 (a
+       drop from a weight of 0), wraps here, where the host's int went negative */
+    left = (int16)(PlayerDat.rec.max_weight - PlayerDat.rec.weight);
     if (shown_capacity != left) {
         restore_rect(SaveHandles[0]);
         shown_capacity = left;

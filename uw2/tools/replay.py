@@ -523,6 +523,8 @@ def dos_can_replay(rec):
     """(True, '') if the DOS build can replay recording rec; else (False, why). A format 5
     recording was made in the port with enhancements, which DOS does not have."""
     d = open(rec, 'rb').read(15)
+    if len(d) >= 5 and d[4] == 6:
+        return False, f'{rec} was recorded in the port with a test\'s cheats (format 6); DOS cannot replay it'
     if len(d) >= 5 and d[4] == 5:
         names = ''
         if len(d) >= 15 and d[12] == 9:
@@ -530,6 +532,13 @@ def dos_can_replay(rec):
             names = open(rec, 'rb').read(15 + n)[15:].decode('ascii', 'replace')
         return False, f'{rec} was recorded in the port with enhancements ({names}); DOS cannot replay it'
     return True, ''
+
+
+def is_cheats(rec):
+    """Whether recording rec was made with a test's cheats (format 6), which the port replays
+    only with EXHUME_TEST_CHEATS=1 (from Exhume's tools/replay.py)."""
+    with open(rec, 'rb') as f: d = f.read(5)
+    return len(d) == 5 and d[4] == 6
 
 
 def run_dos(out, rec=None, steps=(), timeout=900, cfg=None, stage=None, log=None, backend=None, exe=None):
@@ -613,7 +622,9 @@ def run_port(rec, out, extra=(), stage=None, quiet=False):
         shutil.copy(cfg, os.path.join(home, 'DATA', 'UW.CFG'))
     cmd = [exe, '--data', DATA, '--home', home, '--hidden', '--exit-on-halt', '--exit-after', '600000',
            '--replay', os.path.abspath(rec)] + list(extra)
-    r = subprocess.run(exit_after(cmd), capture_output=True, text=True, env=port_env())
+    penv = port_env()
+    if is_cheats(rec): penv['EXHUME_TEST_CHEATS'] = '1'    # format 6: a test's cheats, which the port runs again
+    r = subprocess.run(exit_after(cmd), capture_output=True, text=True, env=penv)
     open(os.path.join(out, 'port.log'), 'w').write(r.stdout + r.stderr)
     for f in ('STATE.OUT',):
         if os.path.exists(os.path.join(out, f)): os.remove(os.path.join(out, f))
