@@ -1,7 +1,7 @@
 /* The settings screen's table (ui/settings.h): every row of the Sound, Controls, Display and Game
-   tabs; the Enhancements tab is generated from enhtab.c. Rows keep to the settings file (home
-   directory) by their key, except the sound cards, which DATA\UW.CFG holds (uwcfg.c's read_uw_cfg
-   and write_uw_cfg). `--settings-list` prints the table, for tools/setcheck.py. */
+   tabs; the Enhancements and Fixes tabs are generated from enhtab.c. Rows keep to the settings
+   file (home directory) by their key, except the sound cards, which DATA\UW.CFG holds (uwcfg.c's
+   read_uw_cfg and write_uw_cfg). `--settings-list` prints the table, for tools/setcheck.py. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

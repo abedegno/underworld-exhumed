@@ -1,0 +1,27 @@
+# weightwrap: recorded by the port from this script (no cheats, so format 4, which DOS replays),
+# from the saved game setup/weightless writes; its golden is DOS's replay of that recording.
+# "Journey Onward" and slot 1 (a carried weight of 0, as an edited saved game can hold it, with
+# a candle in the pack and a shortsword at the player's feet). The candle dragged from the pack
+# with the right button (the button that picks up from the panel, DoInventoryMouse) and let go
+# high in the view: the weight goes below 0 and wraps (a uint16), and the panel's capacity,
+# max_weight - weight, is worked out in 16 bits, where the port's int made it about -6500. Then
+# 1 twice (look down), F3 (get), and the sword taken with the right button and let go over the
+# pack's first slot: EncumCheck's ItemWeight + weight wraps back under the maximum, so DOS takes
+# it, where the port's int made the sum about 65536 and refused it as too heavy
+14000 key esc
+16500 key esc
+20000 key enter        # Journey Onward
+23000 key enter        # slot 1
+30000 move 245 93      # the candle, the pack's first slot
+30300 mdown 245 93 right
+30600 move 200 80
+30900 move 140 60
+31200 mup 140 60 right # let go high in the view
+34000 key 1            # look down, twice
+35000 key 1
+36500 key f3           # get
+37500 move 38 122
+37800 mdown 38 122 right   # the shortsword, onto the cursor
+38100 move 60 120
+38400 move 245 93
+38700 mup 245 93 right    # into the pack's first slot

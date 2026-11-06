@@ -46,7 +46,10 @@ VWORK = os.path.join(R.OUT, 'verify')
 _ORDER = ['newgame', 'walk', 'sound', 'soundfm', 'soundmt', 'items', 'talk', 'load']
 _RECS = sorted(f[:-4] for f in os.listdir(os.path.join(root, 'tests', 'replay')) if f.endswith('.rec'))
 SESSIONS = [n for n in _ORDER if n in _RECS] + [n for n in _RECS if n not in _ORDER]
-STAGE_FROM = {'load': 'items'}          # replayed with the saved game (SAVE1) another session makes
+# replayed with the saved game (SAVE1) another session makes; weightwrap's comes from a setup
+# session (tests/replay/setup/weightless/), which only the port replays: its cheats make a carried
+# weight of 0 with a candle in the pack, as a saved game edited elsewhere can hold it
+STAGE_FROM = {'load': 'items', 'weightwrap': 'setup/weightless'}
 FORMAT = 1
 # Words of a section where a far pointer's segment is kept: compared as which far block they name
 # (SEGS), as tools/replay.py's segment_words finds them between two dumps. These are all the eight
@@ -62,7 +65,30 @@ def say(*a):
     with _print_lock: print(*a, flush=True)
 
 
-def rec_of(name): return os.path.join(root, 'tests', 'replay', name + '.rec')
+def rec_of(name):
+    """NAME's recording: NAME.rec, or for a directory session (a name with a /, setup/NAME)
+    NAME/session.rec, with session.cfg beside it."""
+    if '/' in name: return os.path.join(root, 'tests', 'replay', name, 'session.rec')
+    return os.path.join(root, 'tests', 'replay', name + '.rec')
+
+
+def port_only(name):
+    """A session only the port replays (a setup session's, format 6, with a test's cheats): a
+    stage made by it comes from the port's replay, in golden and verify alike, so that DOS judges
+    the session from the saved game the port made (as Exhume's tools/golden.py does)."""
+    rec = rec_of(name)
+    return os.path.exists(rec) and not R.dos_can_replay(rec)[0]
+
+
+def port_stage_run(name, d):
+    """Replays port-only session name in the port into d (its saved games copied there, as
+    replay.py's run_port does): (exit status, d, seconds)."""
+    shutil.rmtree(d, ignore_errors=True); os.makedirs(d)
+    t = time.time()
+    rc = R.run_port(rec_of(name), d, [], quiet=True)
+    if rc == 0 and not os.path.isdir(os.path.join(d, 'SAVE1')): rc = 7
+    say(f'  {name}: port run (a setup session DOS cannot replay) {"done" if rc == 0 else f"failed ({rc})"} in {time.time() - t:.1f} s')
+    return (rc, d, time.time() - t)
 
 
 def sha256(path):
@@ -308,6 +334,9 @@ def cmd_golden(names, jobs, backend, check):
 
     with pool(jobs) as ex:
         for n in need:
+            if n not in names and port_only(n):         # a setup session: the port makes its saved game
+                runs[(n, 1)] = ex.submit(port_stage_run, n, os.path.join(WORK, n, 'port1'))
+                continue
             for k in ((1, 2) if n in names else (1,)):
                 runs[(n, k)] = ex.submit(dos_run, n, k)
         for n in names:
@@ -428,8 +457,11 @@ def cmd_verify(names, jobs, debug=False, cov=False):
             f'\n         (the dump is {rel(os.path.join(d, "STATE.OUT"))}; for byte ranges, replay in DOS and use replay.py compare)' + \
             ''.join('\n         note: ' + x for x in notes), dt
 
+    def setup(name):
+        return port_stage_run(name, os.path.join(VWORK, name, 'port'))[0]
+
     with pool(jobs) as ex:
-        for n in need: futs[n] = ex.submit(one, n)
+        for n in need: futs[n] = ex.submit(setup if n not in names and port_only(n) else one, n)
         for n in names: results[n] = futs[n].result()
     print(f'== verify: {len(names)} sessions in the port{" (UBSan build)" if debug else " (coverage build)" if cov else ""} against the goldens, '
           f'{time.time() - t0:.1f} s')

@@ -53,11 +53,21 @@ The card numbers on the command line are in each port's `--help`. Choosing a car
 
 ### Enhancements
 
-One switch for each enhancement the game has, all off by default. The selected one's help shows under the rows, with its credit ("from UltimaHacks ..." for those taken from another project), and those that change how the game plays, not just how it looks or how fast it goes, are marked "changes play". What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md). UW1 has fourteen, UW2 fifteen (UW1 alone has `tidy-objects`; UW2 alone `subtitles` and `skill-messages`); the lists scroll.
+One switch for each enhancement the game has, all off by default. The selected one's help shows under the rows, with its credit ("from UltimaHacks ..." for those taken from another project), and those that change how the game plays, not just how it looks or how fast it goes, are marked "changes play". What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md). UW1 has eleven, UW2 thirteen (it adds `subtitles` and `skill-messages`); UW2's list scrolls.
 
 | Option | What it does | Settings-file key | When | Command line |
 |---|---|---|---|---|
 | each enhancement | turns it on or off | `enhance=` (a comma-separated list of the names that are on) | next start | `--enhance NAME[,NAME]` and `--no-enhance NAME` (kept); `--enhance list` lists them |
+
+### Fixes
+
+One switch for each fix the game has, all off by default: changes that correct a fault of the original game, each marked "changes play". They are kept with the enhancements, in the same `enhance=` list, and turned on in the same way. What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md#fixes). UW1 has three (`tidy-objects`, `restore-at-rest` and `plain-debris`), UW2 two (`restore-at-rest` and `plain-debris`).
+
+![The Fixes tab](img/settings-fixes.png)
+
+| Option | What it does | Settings-file key | When | Command line |
+|---|---|---|---|---|
+| each fix | turns it on or off | `enhance=`, with the enhancements | next start | `--enhance NAME[,NAME]` and `--no-enhance NAME` (kept); `--enhance list` lists them after the enhancements |
 
 ### Game
 
