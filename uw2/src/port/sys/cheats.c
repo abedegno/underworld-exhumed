@@ -12,7 +12,7 @@
                              the move, the game kills the player it cannot place, as it does
                              after any teleport; LEVEL 1 to 80 (a level the game has: the
                              game stops with its own error for one it lacks), X and Y 1 to 62
-     give ITEM [QTY [QUALITY]] [drop]
+     give ITEM [QTY [QUALITY]] [spell N] [drop]
                              CreateObj (the game's allocator), QTY of a stack (1 to 511) and
                              QUALITY (0 to 63; else the game's 40), into the first empty
                              backpack slot on show (AddToInventory) when the player can carry it
@@ -20,7 +20,11 @@
                              conversation puts an object there (put_at, stay_centered). ITEM is
                              the game's item id (docs/FORMATS.md; src/include/items.h), decimal
                              or 0x hex, an object a player can carry: 0x000 to 0x03F or 0x080 to
-                             0x13F
+                             0x13F. spell N enchants an is_quant object (a scroll, say) with
+                             spell N of spells[] (0 to 68), as a level's enchanted objects are
+                             stored and decode_obj_spell reads them: ID_ENCHANT and ID_FLAG11
+                             set, the link LINK_SPECIAL + N; QTY, the same link, may then only
+                             be 1 (UW1's cheat, the same)
      set FIELD VALUE         hp (1 to the maximum), mana (0 to the maximum), str, dex, int (1 to
                              99, then player_compute: the maxima, carrying weight str * 13 + 300
                              among them, as a level gained does), or a skill by name (0 to 30; enum
@@ -31,6 +35,7 @@
    The numbers are checked when the script is read; what depends on the game (a free object, a
    free square) when the cheat runs, which then says what failed and changes nothing. */
 #include "compat.h"
+#include "combat.h"
 #include "event.h"
 #include "inv.h"
 #include "items.h"
@@ -72,12 +77,17 @@ static const char *c_goto(int argc, char *argv[], int run)
 
 static const char *c_give(int argc, char *argv[], int run)
 {
-    long item = -1, qty = 0, quality = -1, v;
+    long item = -1, qty = 0, quality = -1, spell = -1, v;
     int drop = 0, i, n = 0, slot;
     struct Object far *obj;
     for (i = 0; i < argc; i++) {
         if (!strcmp(argv[i], "drop")) {
             drop = 1;
+            continue;
+        }
+        if (!strcmp(argv[i], "spell")) {
+            if (++i == argc || cheat_num(argv[i], 0, (long)(sizeof spells / sizeof spells[0]) - 1, &spell))
+                return "spell and a spell number, 0 to 68";
             continue;
         }
         if (n == 3 || cheat_num(argv[i], n == 1 ? 1 : 0, n == 2 ? 63 : 0x1FF, &v))
@@ -90,14 +100,20 @@ static const char *c_give(int argc, char *argv[], int run)
     if (n == 0) return "an item";
     if (!((item >= 0 && item <= 0x3F) || (item >= 0x80 && item <= 0x13F)))
         return "an object a player can carry: 0x000 to 0x03F or 0x080 to 0x13F";
+    if (qty > 1 && spell >= 0) return "a spell on one object, not a stack";
     if (!run) return NULL;
     if ((obj = CreateObj((int)item, 0)) == 0) return "no free object";
-    if (qty) {
+    if (qty || spell >= 0) {
         if (!OBJ_ISQUANT(obj)) {
             Obj_Free(obj);
-            return "not an object with a quantity";
+            return spell < 0 ? "not an object with a quantity" : "not an object that holds its spell itself";
         }
-        obj->ol.f.link = (uint16)qty;
+        if (spell < 0)
+            obj->ol.f.link = (uint16)qty;
+        else {
+            obj->id |= ID_ENCHANT | ID_FLAG11;
+            obj->ol.f.link = (uint16)(LINK_SPECIAL | spell);
+        }
     }
     if (quality >= 0) obj->qn.f.quality = (uint16)quality;
     if (!drop && OpenBag == 0 && EncumCheck(obj))
@@ -163,7 +179,7 @@ static const char *c_set(int argc, char *argv[], int run)
 
 static const struct cheat_cmd cmds[] = {
     { "goto", "LEVEL X Y", c_goto },
-    { "give", "ITEM [QTY [QUALITY]] [drop]", c_give },
+    { "give", "ITEM [QTY [QUALITY]] [spell N] [drop]", c_give },
     { "set", "FIELD VALUE", c_set },
 };
 

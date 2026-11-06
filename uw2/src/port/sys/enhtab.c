@@ -23,4 +23,7 @@ const struct enhance_flag enhance_table[ENH_COUNT] = {
     { "rune-keys", "Ctrl+Alt+letter picks a rune you have, Ctrl+Alt+Backspace clears, Ctrl+Alt+Space casts", ENH_PRESENTATION, UH, NULL },
     { "tidy-objects", "A stack too heavy to take part of no longer loses an object slot, and lost slots are freed on arrival", ENH_FIX, NULL, "UW1" },
     { "restore-at-rest", "A restored game starts at rest, without the motion or fall it was restored in", ENH_FIX, NULL, NULL },
+    /* combat/DAMAGE.C's remove_object turns a broken object into debris keeping the spell it
+       carried, so the debris casts it again and again for nothing; this takes the spell away */
+    { "plain-debris", "An enchanted object that breaks loses its spell, so its debris casts nothing", ENH_FIX, NULL, NULL },
 };

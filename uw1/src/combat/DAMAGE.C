@@ -151,6 +151,42 @@ char far remove_object(struct Object far *obj, struct Object far *who, char type
     if (debris >= 0)
     {
         SET_ITEM(obj, debris);
+#ifndef __TURBOC__
+        /* port only: --enhance plain-debris (docs/ENHANCEMENTS.md). SET_ITEM above changes only
+           the item number, so a broken object keeps the spell it carried, and decode_obj_spell
+           (obj/USEITEMS.C) still finds it on the debris: an enchanted scroll thrown at a wall
+           until it breaks leaves debris that casts its spell each time it is used, for
+           nothing, where reading the scroll would have used it up. A spell is carried in one
+           of two ways, and this takes away both, so the debris carries none:
+           - in the object itself (an is_quant object with ID_ENCHANT; its link less
+             LINK_SPECIAL names the spell): remove_spell clears ID_ENCHANT, as the game does
+             itself when a worn item's enchantment ends (game/PLAYDATA.C). The link is left
+             as it is, which a pile of debris never reads as a quantity (LINK_SPECIAL is set);
+           - as a spell object (MAJOR_SPEC minor 2) in its contents. Most objects have had
+             their contents freed above (Obj_FreeChain); a chest, barrel or bag has had
+             them spilled instead, so one may be left.
+             Obj_InList finds it as decode_obj_spell does; Obj_Rem unlinks it and Obj_Free
+             frees it, as UW2's charge_object (combat/SPELLS2.C) does with a spell it
+             destroys. Not Obj_Punt, which would also free a chain from the spell's link
+             word, where a spell object keeps its spell, not contents.
+           Done before obj_deal places the debris, so nothing sees the enchanted debris */
+        if (ENHANCED(ENH_PLAIN_DEBRIS))
+        {
+            struct Object far *spell;
+
+            if (OBJ_ISQUANT(obj))
+                remove_spell(obj);
+            else if (OBJ_LINK(obj) > 0)
+            {
+                head = &obj->ol.link;
+                if ((spell = Obj_InList(&head, 0, MAJOR_SPEC, 2, 0)) != 0)
+                {
+                    Obj_Rem(head, spell);
+                    Obj_Free(spell);
+                }
+            }
+        }
+#endif
         if (obj >= (struct Object far *)objdata && !obj_deal(obj, x, y, 1))
             return 1;
     }
