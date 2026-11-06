@@ -990,7 +990,8 @@ signed char far compute_trz_or_try_rather(unsigned speed, char flag)  /* UW1: ch
     register int dz;
 
     set_up_target();
-    dz = OBJ_Z(mytarget) - OBJ_Z(meptr);
+    /* through FARNULLTRAP, as set_up_target's own reads: a target of 0 is a null pointer */
+    dz = OBJ_Z(FARNULLTRAP(mytarget)) - OBJ_Z(meptr);
     dist = cSqRt(tdisttsqr);
     if (dist == 0)
         return dz > 0 ? 0xF : 0xF1;
