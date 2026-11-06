@@ -593,7 +593,8 @@ int far ItemFitsSlot(struct Object far *obj, int slot)
             if (slot > 19) {
                 for (bag = OpenBag; bag != 0; bag = bag->prev) {
                     cap = Containers[Obj_PtrTMem(&bag->obj)->id & ID_INCLASS].capacity;
-                    ok &= cap == 0 || bag->weight + weight <= cap;
+                    /* 16 bits, as Turbo C's: past 32767 the sum goes negative and fits */
+                    ok &= cap == 0 || (int16)(bag->weight + weight) <= cap;
                 }
             }
             BagWeight(&cont->ol.link, &weight);
