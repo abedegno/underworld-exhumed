@@ -1,0 +1,34 @@
+# plain-debris: from the menu, load the saved game setup/plain-debris writes (a new character
+# with a scroll of Light of quality 1 in the pack's first slot); turn right to face the wall,
+# drag the scroll out of the pack with the right button into the view, which throws it at the
+# wall and breaks it; look down three times and at the pile of debris it leaves; drag the debris
+# into the pack's first slot with the right button and use it there twice (the left button).
+# With the fix the debris casts nothing. Without it (the original, the same recording with its
+# enhancements chunk naming skip-intro alone) each use casts Light: the view brightens and the
+# spell's icon shows beside the compass
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+7000 down d            # turn right, to face the wall
+7500 up d
+9000 move 250 92       # the scroll, the pack's first slot
+9300 mdown 250 92 right
+9600 move 220 85
+9900 move 180 78
+10200 move 155 75      # into the view: thrown at the wall, which breaks it
+10500 mup 155 75 right
+13000 key 1            # look down, three times
+13800 key 1
+14600 key 1
+16000 move 150 89      # the debris at the foot of the wall: "You see a pile of debris"
+16300 mdown 150 89 right
+16500 mup 150 89 right
+18000 move 150 89      # the debris, dragged into the pack's first slot
+18300 mdown 150 89 right
+18600 move 200 90
+18900 move 250 92
+19200 mup 250 92 right
+21000 mdown 250 92 left    # used, twice
+21200 mup 250 92 left
+23000 mdown 250 92 left
+23200 mup 250 92 left
+25000 move 160 100
