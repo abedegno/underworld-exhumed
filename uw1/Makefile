@@ -136,11 +136,13 @@ package:
 icons:
 	@$(PORT)/icons.py --config exhume.toml
 
+# then the mod settings (../tools/modcheck.py: --start-level, --start-square), which Exhume's
+# test.py does not know of
 test:
-	@$(PORT)/test.py --config exhume.toml fast
+	@$(PORT)/test.py --config exhume.toml fast && $(PY) ../tools/modcheck.py --config exhume.toml
 
 test-full:
-	@$(PORT)/test.py --config exhume.toml full
+	@$(PORT)/test.py --config exhume.toml full && $(PY) ../tools/modcheck.py --config exhume.toml
 
 verify:
 	@$(PORT)/replay.py --config exhume.toml verify all

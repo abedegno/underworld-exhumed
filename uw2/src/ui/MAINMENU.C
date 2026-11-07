@@ -34,6 +34,11 @@
 #include "sound.h"
 #include "sys.h"
 #include "ui.h"
+#ifndef __TURBOC__
+#include "event.h"
+#include "map.h"
+#include "object.h"
+#endif
 
 /* name: FM Towns keeps these as statics, so their names are not known. */
 static unsigned char far *opbuf = 0;    /* where gronk_gr puts the next button picture */
@@ -113,6 +118,66 @@ void far draw_start_buttons(int n, struct Button far *b, unsigned char text, int
     }
     mouse_show();
 }
+
+#ifndef __TURBOC__
+/* port-only: where the player fits at or near a mod's start square, for port_new_game_start:
+   the squares 0, 1, 2, 3 and 4 away in turn (the box find_good_x_and_y searches), each ring from
+   its south-west corner row by row, asking can_place as find_good_x_and_y asks it. Not
+   find_good_x_and_y itself, whose visited table is half cleared (FINDINGS), so the square it
+   picks hangs on what the stack held: one start, or its replay, could differ from another.
+   Returns 0 when the player fits nowhere there. */
+static int port_start_fit(int x, int y, int16 *nx, int16 *ny)
+{
+    int r, tx, ty;
+    struct Tile far *tile;
+
+    for (r = 0; r <= 4; r++)
+        for (ty = y - r; ty <= y + r; ty++)
+            for (tx = x - r; tx <= x + r; tx++) {
+                if ((tx != x - r && tx != x + r && ty != y - r && ty != y + r)
+                    || tx < 1 || tx > 62 || ty < 1 || ty > 62)
+                    continue;
+                tile = Map_GetAddr(tx, ty);
+                if (can_place(ThePlayer->id & ID_ITEM, Obj_MemTPtr(ThePlayer), tx * 8 + 3, ty * 8 + 3,
+                              (tile->height << 3) + ((tile_walls[tile->type] & 0x20) ? 4 : 0),
+                              0, 8)) {
+                    *nx = tx;
+                    *ny = ty;
+                    return 1;
+                }
+            }
+    return 0;
+}
+
+/* port-only (sys/mods.c, docs/MODDING.md): a new game's first level and square. Without a
+   mod, the original's GetLevel(1), load_dl(), player_setup(0x13, 0x30, -1) and
+   do_level_hacks(1, 0). With a mod's start level or square: that level (GetLevel sets
+   PlayerLevel and reads its light, which load_dl reads again, as in the original) and square,
+   the player moved to the nearest square it fits on (port_start_fit), or left on the square
+   given when it fits nowhere near, as the original's start leaves it. Returns 0 if the level
+   cannot be loaded. */
+static int port_new_game_start(void)
+{
+    int level = port_start_level(1);
+    int x = port_start_square(0, 0x13), y = port_start_square(1, 0x30);
+    int16 nx = x, ny = y;
+
+    if (GetLevel(level) <= 0)
+        return 0;
+    load_dl();
+    if (port_start_level(0) || port_start_square(0, 0)) {
+        int found = port_start_fit(x, y, &nx, &ny);
+        if (!found) {
+            nx = x;
+            ny = y;
+        }
+        port_start_placed(level, x, y, nx, ny, found);
+    }
+    player_setup(nx, ny, -1);
+    do_level_hacks(level, 0);
+    return 1;
+}
+#endif
 
 /* The main menu loop (intro set: play the introduction when there are no saves). Returns
    once a game has been started or restored, with the game screen set up; a restore that
@@ -197,11 +262,17 @@ void far real_start(int intro)
                 move_initial_files();
                 if ((err = init_babl()) != 0)
                     pfatal_code(err);
+#ifndef __TURBOC__
+                /* port-only: a mod's start level and square (sys/mods.c), else the game's own */
+                done = port_new_game_start();
+                if (done) {
+#else
                 done = GetLevel(1) > 0;
                 if (done) {
                     load_dl();
                     player_setup(0x13, 0x30, -1);
                     do_level_hacks(1, 0);
+#endif
                     preload_cr(0);
                     PreLoadCritPages();
                 }
