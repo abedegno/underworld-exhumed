@@ -26,4 +26,8 @@ const struct enhance_flag enhance_table[ENH_COUNT] = {
     /* combat/DAMAGE.C's remove_object turns a broken object into debris keeping the spell it
        carried, so the debris casts it again and again for nothing; this takes the spell away */
     { "plain-debris", "An enchanted object that breaks loses its spell, so its debris casts nothing", ENH_FIX, NULL, NULL },
+    /* UW2's DoPlayerWeapon (combat/COMBAT.C) adds a melee weapon's Accuracy enchantment to the
+       damage and its Damage enchantment to the chance to hit; this names each for what it does
+       (obj/LOOK.C's do_of), the game unchanged. UW1's work as named */
+    { "true-enchants", "A weapon's enchantment is named for what it does: Damage when it adds damage, Accuracy when it adds to hit (the original names them the other way round)", ENH_FIX, NULL, "UW2" },
 };

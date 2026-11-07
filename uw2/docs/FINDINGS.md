@@ -149,7 +149,7 @@ Each entry was re-read against the source before it was written here. The sectio
 - **Evidence:** code reading and the shipped `STRINGS.PAK` (block 6); not measured in play.
 - **Confidence:** certain that the names and the effects disagree; whether the code or the strings were meant to change is not known.
 - **Effect:** players who choose a weapon by its enchantment's name get the other bonus. Players have long reported the two as swapped, though usually for UW1, where they are not.
-- **For a port:** matching DOS keeps both; a fix belongs in the strings, so that the game's arithmetic is unchanged.
+- **For a port:** matching DOS keeps both; a fix belongs in the strings, so that the game's arithmetic is unchanged. The optional fix `true-enchants` does that, in `do_of`: it names each melee weapon enchantment for what it does ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md)).
 
 ### Item toughness on an item in a high slot goes to one location twice
 

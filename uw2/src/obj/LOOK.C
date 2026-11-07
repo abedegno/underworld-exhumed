@@ -179,6 +179,21 @@ char far do_of(struct Object far *obj, int lore, char *s)
     always_decode = 0;
     if (found != 0 && lore == 3) {
         if (major == 12) {
+#ifndef __TURBOC__
+            /* port only: --enhance true-enchants (docs/ENHANCEMENTS.md). A melee weapon's
+               enchantment is named here by string 0x1C0 + effect: 0..3 the Accuracy names
+               (Minor, Major, Great, Unsurpassed), 4..7 the Damage ones. But combat/COMBAT.C's
+               DoPlayerWeapon, the only code that applies them, adds 2e + 1 damage for effects
+               0..3 and 2e - 7 to hit for 4..7 (FINDINGS.md). Flipping bit 2 of the effect for
+               the name swaps the halves, so each weapon is named for what it does, with the
+               same strength: effect e (damage 2e + 1) is named "e Damage", effect 4 + e (to hit
+               2e + 1) "e Accuracy". Only the name: the effect DoPlayerWeapon reads is not
+               changed. Missiles, armour (minor 2 and 3, named from 0x1D0) and the special
+               weapons (8 and up) are left alone */
+            if (ENHANCED(ENH_TRUE_ENCHANTS) && OBJ_MAJOR(obj) == MAJOR_HACK && OBJ_MINOR(obj) == MINOR_WEAPON
+                && effect < 8)
+                effect ^= 4;
+#endif
             major = 0x1C0;
             if (OBJ_MINOR(obj) > 1)
                 effect += 0x10;

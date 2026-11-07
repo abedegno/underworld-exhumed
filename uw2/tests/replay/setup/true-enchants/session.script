@@ -1,0 +1,40 @@
+# true-enchants: the saved game the true-enchants enhanced session starts from. A new character,
+# as the newgame session makes one (every default, the name Avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): two longswords with weapon enchantments, as a level
+# stores them (give ITEM enchant N), effect 2, which the game names Great Accuracy but which adds
+# damage, and effect 6, named Great Damage but adding to hit (combat/COMBAT.C's DoPlayerWeapon),
+# and two scrolls of Name Enchantment (spell 34, give ITEM spell N), into the pack. Saved in slot
+# 1, described "names"
+14000 key esc
+16500 key esc
+20000 key enter        # Create Character
+24000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+27000 key enter        # the difficulty
+30000 key enter
+33000 key enter
+36000 key enter
+39000 key enter
+42000 key enter
+45000 key enter
+48000 key a            # the name
+48200 key v
+48400 key a
+48600 key t
+48800 key a
+49000 key r
+50000 key enter
+53000 key enter        # Yes
+60000 cheat give 0x005 enchant 2
+60100 cheat give 0x005 enchant 6
+60200 cheat give 0x136 1 spell 34
+60300 cheat give 0x136 1 spell 34
+64000 down ctrl        # save: Ctrl+S, slot 1, "names"
+64100 key s
+64300 up ctrl
+66000 key enter
+67500 key n
+67700 key a
+67900 key m
+68100 key e
+68300 key s
+69000 key enter
