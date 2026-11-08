@@ -12,7 +12,7 @@
                              the move, the game kills the player it cannot place, as it does
                              after any teleport; LEVEL 1 to 80 (a level the game has: the
                              game stops with its own error for one it lacks), X and Y 1 to 62
-     give ITEM [QTY [QUALITY]] [enchant N | spell N] [drop]
+     give ITEM [QTY [QUALITY]] [enchant N | spell N] [owner N] [drop]
                              CreateObj (the game's allocator), QTY of a stack (1 to 511) and
                              QUALITY (0 to 63; else the game's 40), into the first empty
                              backpack slot on show (AddToInventory) when the player can carry it
@@ -32,6 +32,8 @@
                                (ID_ENCHANT) with the spell by number N, 0 to 68 (id bit 11 set,
                                its link LINK_SPECIAL + N: spells[N], combat/SPELLS.C), which a
                                scroll casts when read (UseBook); QTY may then only be 1
+                             owner N sets the owner field (0 to 63; CreateObj leaves 0): for a key,
+                             the number of the lock it opens (UseKeyOn)
      set FIELD VALUE         hp (1 to the maximum), mana (0 to the maximum), str, dex, int (1 to
                              99, then player_compute: the maxima, carrying weight str * 13 + 300
                              among them, as a level gained does), or a skill by name (0 to 30; enum
@@ -84,7 +86,7 @@ static const char *c_goto(int argc, char *argv[], int run)
 
 static const char *c_give(int argc, char *argv[], int run)
 {
-    long item = -1, qty = 0, quality = -1, enchant = -1, spell = -1, v;
+    long item = -1, qty = 0, quality = -1, enchant = -1, spell = -1, owner = -1, v;
     int drop = 0, i, n = 0, slot;
     struct Object far *obj;
     struct Object far *sp;
@@ -101,6 +103,11 @@ static const char *c_give(int argc, char *argv[], int run)
         if (!strcmp(argv[i], "spell")) {
             if (++i == argc || cheat_num(argv[i], 0, (long)(sizeof spells / sizeof spells[0]) - 1, &spell))
                 return "spell and a spell number, 0 to 68";
+            continue;
+        }
+        if (!strcmp(argv[i], "owner")) {
+            if (++i == argc || cheat_num(argv[i], 0, 63, &owner))
+                return "owner and a value, 0 to 63";
             continue;
         }
         if (n == 3 || cheat_num(argv[i], n == 1 ? 1 : 0, n == 2 ? 63 : 0x1FF, &v))
@@ -140,6 +147,7 @@ static const char *c_give(int argc, char *argv[], int run)
         Obj_Add(&obj->ol.link, sp);
     }
     if (quality >= 0) obj->qn.f.quality = (uint16)quality;
+    if (owner >= 0) obj->ol.f.owner = (uint16)owner;
     if (!drop && OpenBag == 0 && EncumCheck(obj))
         for (slot = 11; slot <= 18; slot++)             /* the backpack (inv.h) */
             if (Inventory[slot].f.index == 0 && ItemFitsSlot(obj, slot) > 0) {
@@ -203,7 +211,7 @@ static const char *c_set(int argc, char *argv[], int run)
 
 static const struct cheat_cmd cmds[] = {
     { "goto", "LEVEL X Y", c_goto },
-    { "give", "ITEM [QTY [QUALITY]] [enchant N | spell N] [drop]", c_give },
+    { "give", "ITEM [QTY [QUALITY]] [enchant N | spell N] [owner N] [drop]", c_give },
     { "set", "FIELD VALUE", c_set },
 };
 

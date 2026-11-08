@@ -9,6 +9,7 @@ For players. Each release's notes are drafted from here. Releases are tagged `uw
 - **Changed:** the optional changes that correct a fault of the original game are now called fixes and kept apart from the enhancements: tidy-objects and restore-at-rest are on a new Fixes tab of the settings screen, listed after the enhancements by `--enhance list` and logged on a `fix:` line of their own. They are turned on as before (`--enhance NAME`), and a settings file that already has one on keeps it.
 - **New:** the fix plain-debris (`--enhance plain-debris`, or the settings screen's Fixes tab). An enchanted object that breaks loses its spell. Before, the debris it left kept the spell, so an enchanted scroll thrown at a wall until it broke gave debris that cast the spell every time it was used, for ever.
 - **New:** the fix armour-spells (`--enhance armour-spells`, or the settings screen's Fixes tab). Resist Blows, Thick Skin and Iron Flesh now add to your armour, as they were meant to. In the original they cost their mana and show their icon but add nothing: the game keeps the spell's level and then loses it before adding it to your armour. With the fix the best of them active adds 2, 3 or 5 to your armour everywhere on your body, so blows that land do less damage.
+- **New:** optional enhancement key-ring (`--enhance key-ring`). Using a key on a lock it does not fit tries the other keys you carry, bags included, and locks or unlocks the lock with the one that fits ("Another key unlocks the lock."), or says "No key fits."
 
 ## 1.0.2 (14 October 2026)
 

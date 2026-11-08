@@ -53,7 +53,7 @@ The card numbers on the command line are in each port's `--help`. Choosing a car
 
 ### Enhancements
 
-One switch for each enhancement the game has, all off by default. The selected one's help shows under the rows, with its credit ("from UltimaHacks ..." for those taken from another project), and those that change how the game plays, not just how it looks or how fast it goes, are marked "changes play". What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md). UW1 has eleven, UW2 thirteen (it adds `subtitles` and `skill-messages`); UW2's list scrolls.
+One switch for each enhancement the game has, all off by default. The selected one's help shows under the rows, with its credit ("from UltimaHacks ..." for those taken from another project), and those that change how the game plays, not just how it looks or how fast it goes, are marked "changes play". What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md). UW1 has twelve, UW2 fourteen (it adds `subtitles` and `skill-messages`); UW2's list scrolls.
 
 | Option | What it does | Settings-file key | When | Command line |
 |---|---|---|---|---|

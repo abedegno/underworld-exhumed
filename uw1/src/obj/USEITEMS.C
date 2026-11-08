@@ -248,6 +248,89 @@ void far UseLockpickOn(struct Object far *obj, char how)
     }
 }
 
+#ifndef __TURBOC__
+/* port only: --enhance key-ring (docs/ENHANCEMENTS.md). A key that does not fit is answered
+   "The key does not fit."; with key-ring the player's other keys are tried, as a key ring
+   would be. A key opens the lock whose number is its owner field (UseKeyOn below), and a lock
+   holds its number in its link (checkLock), so the key that fits is the one carried whose
+   owner field is the lock's number: found without trying each in checkLock, which would
+   change the lock or set off its traps. Then checkLock is called with it, as UseKeyOn calls
+   it, so locking, unlocking and their traps are the game's own. */
+
+/* a real key, not the lockpick or the lock (UseKey, class 0x10) */
+static int key_ring_key(struct Object far *obj)
+{
+    int item = OBJ_ITEM(obj);
+
+    return item >= ITEM_KEY_100 && item < ITEM_LOCK && item != ITEM_LOCKPICK;
+}
+
+/* the first real key for lock number lock in list and the containers in it, depth first, as
+   INVDATA.C's find_obj walks them */
+static struct Object far *key_ring_find(struct Object far *list, int lock)
+{
+    struct Object far *next;
+    struct Object far *found;
+
+    while (list != 0) {
+        if (key_ring_key(list) && OBJ_OWNER(list) == lock)
+            return list;
+        if (!OBJ_ISQUANT(list) && (next = Obj_PtrTMem(&list->ol.link)) != 0
+            && (found = key_ring_find(next, lock)) != 0)
+            return found;
+        list = Obj_PtrTMem(&list->qn.link);
+    }
+    return 0;
+}
+
+/* After the key used did not fit door (checkLock's 0): the lock's number, from its lock as
+   checkLock finds it, and a key for it anywhere in the inventory: the paperdoll, the hands,
+   the rings and the backpack (slots 0 to INV_PACK_LAST, as FindObj searches them) and every
+   container in them. Returns 0, changing nothing, when the door has no lock with a number a
+   key can hold (0, or above 63: a key's owner field is 6 bits), so no key opens it and the
+   original message stands; else prints what happened, the game's own message but for the
+   two that say "The key": "Another key ..." when another key locks or unlocks it, "No key
+   fits." when none does. */
+static int key_ring(struct Object far *door)
+{
+    struct Object far *lock;
+    struct Object far *key;
+    struct Object far *obj;
+    union Link far *link;
+    int number;
+    int result;
+    int slot;
+
+    if (OBJ_ISQUANT(door) || door->ol.f.link <= 0)
+        return 0;
+    link = &door->ol.link;
+    if ((lock = Obj_InList(&link, 0, MAJOR_SPEC, 0, 0xF)) == 0 || (number = lock->ol.f.link & 0x1FF) == 0
+        || number > 0x3F)                /* no key's owner field (6 bits) holds it */
+        return 0;
+    key = 0;
+    for (slot = 0; slot <= INV_PACK_LAST && key == 0; slot++) {
+        if ((obj = Obj_PtrTMem(&Inventory[slot])) == 0)
+            continue;
+        if (key_ring_key(obj) && OBJ_OWNER(obj) == number)
+            key = obj;
+        else if (!OBJ_ISQUANT(obj) && Obj_PtrTMem(&obj->ol.link) != 0)
+            key = key_ring_find(Obj_PtrTMem(&obj->ol.link), number);
+    }
+    if (key == 0) {
+        scroll_print("No key fits.\n");
+        return 1;
+    }
+    result = checkLock(ThePlayer, door, OBJ_OWNER(key));
+    if (result == 2)
+        scroll_print("Another key locks the lock.\n");
+    else if (result == 3)
+        scroll_print("Another key unlocks the lock.\n");
+    else
+        game_sprint(result + 2);
+    return 1;
+}
+#endif
+
 /* The second half of using a key: checkLock with the key's owner field (the lock it opens),
    and message result + 2. */
 void far UseKeyOn(struct Object far *obj, char how)
@@ -260,6 +343,12 @@ void far UseKeyOn(struct Object far *obj, char how)
     CursorObjPtr = 0;
     GameInputMode = 0;
     result = checkLock(ThePlayer, obj, OBJ_OWNER(ObjectActing));
+#ifndef __TURBOC__
+    /* port only: --enhance key-ring, the other keys carried tried when this one does not
+       fit (key_ring above) */
+    if (result == 0 && ENHANCED(ENH_KEY_RING) && key_ring_key(ObjectActing) && key_ring(obj))
+        return;
+#endif
     game_sprint(result + 2);
 }
 

@@ -1,0 +1,20 @@
+# key-ring: from the menu, load the saved game setup/key-ring writes (facing the locked door at
+# (36, 8), lock 1, with a key for lock 1 and a key for lock 2 in the pack); use the key for
+# lock 2 on the door twice (left button on the key, right button on the door). With the flag
+# the first use unlocks the door with the key for lock 1 ("Another key unlocks the lock.") and
+# the second locks it again ("Another key locks the lock."); the original says "The key does
+# not fit." to both
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+7000 move 268 92       # the key for lock 2, used on the door
+7300 mdown 268 92 left
+7600 mup 268 92 left
+8800 move 140 90
+9100 mdown 140 90 right
+9400 mup 140 90 right
+11000 move 268 92      # and again
+11300 mdown 268 92 left
+11600 mup 268 92 left
+12800 move 140 90
+13100 mdown 140 90 right
+13400 mup 140 90 right

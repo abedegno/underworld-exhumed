@@ -1,0 +1,37 @@
+# key-ring: the saved game the key-ring enhanced session starts from. A new character, as the
+# newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): a key for lock 1 (0x102, owner 1), the lock of the
+# locked door at (36, 8) on level 1, and a key for another lock (0x103, owner 2), into the pack,
+# and the player moved to (36, 7), the corridor south of that door. Saved in slot I, described
+# "keys"
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat give 0x102 owner 1
+44100 cheat give 0x103 owner 2
+44200 cheat goto 1 36 7
+47000 down ctrl        # save: Ctrl+S, slot I, "keys"
+47100 key s
+47300 up ctrl
+49000 key enter
+50500 key k
+50700 key e
+50900 key y
+51100 key s
+52000 key enter

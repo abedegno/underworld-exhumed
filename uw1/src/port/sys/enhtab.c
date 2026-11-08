@@ -33,4 +33,6 @@ const struct enhance_flag enhance_table[ENH_COUNT] = {
        damage and its Damage enchantment to the chance to hit; this names each for what it does
        (obj/LOOK.C's do_of), the game unchanged. UW1's work as named */
     { "true-enchants", "A melee weapon's enchantment is named for what it does: Damage when it adds damage, Accuracy when it adds to hit (the original names them the other way round)", ENH_FIX, NULL, "UW2" },
+    /* obj/USEITEMS.C's UseKeyOn: a key that does not fit tries the other keys carried */
+    { "key-ring", "A key that does not fit tries the other keys you carry, bags included, and locks or unlocks with the one that fits", ENH_GAMEPLAY, NULL, NULL },
 };
