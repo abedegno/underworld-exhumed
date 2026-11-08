@@ -286,10 +286,11 @@ static struct Object far *key_ring_find(struct Object far *list, int lock)
 /* After the key used did not fit door (checkLock's 0): the lock's number, from its lock as
    checkLock finds it, and a key for it anywhere in the inventory: the paperdoll, the hands,
    the rings and the backpack (slots 0 to INV_PACK_LAST, as FindObj searches them) and every
-   container in them. Returns 0, changing nothing, when the door has no lock with a number
-   (no key opens it, and the original message stands); else prints what happened, the
-   game's own message but for the two that say "The key": "Another key ..." when another
-   key locks or unlocks it, "No key fits." when none does. */
+   container in them. Returns 0, changing nothing, when the door has no lock with a number a
+   key can hold (0, or above 63: a key's owner field is 6 bits), so no key opens it and the
+   original message stands; else prints what happened, the game's own message but for the
+   two that say "The key": "Another key ..." when another key locks or unlocks it, "No key
+   fits." when none does. */
 static int key_ring(struct Object far *door)
 {
     struct Object far *lock;
@@ -303,7 +304,8 @@ static int key_ring(struct Object far *door)
     if (OBJ_ISQUANT(door) || door->ol.f.link <= 0)
         return 0;
     link = &door->ol.link;
-    if ((lock = Obj_InList(&link, 0, MAJOR_SPEC, 0, 0xF)) == 0 || (number = lock->ol.f.link & 0x1FF) == 0)
+    if ((lock = Obj_InList(&link, 0, MAJOR_SPEC, 0, 0xF)) == 0 || (number = lock->ol.f.link & 0x1FF) == 0
+        || number > 0x3F)                /* no key's owner field (6 bits) holds it */
         return 0;
     key = 0;
     for (slot = 0; slot <= INV_PACK_LAST && key == 0; slot++) {
