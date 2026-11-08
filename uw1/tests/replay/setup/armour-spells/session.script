@@ -1,0 +1,37 @@
+# armour-spells: the saved game the armour-spells session starts from. A new character, as the
+# newgame session makes one (every default, the name avatar); then a test's cheats
+# (EXHUME_TEST_CHEATS=1; recording format 6): a scroll of Resist Blows (0x138, spell 1, armour
+# level 2) and a scroll of Iron Flesh (spell 42, armour level 5), each as a level stores an
+# enchanted scroll, into the pack. Saved in slot I, described "armour"
+9000 key esc
+12000 key esc
+15000 key enter        # Create Character
+18000 key enter        # every default: sex, handedness, class, the skills, the portrait,
+20000 key enter        # the difficulty
+22000 key enter
+24000 key enter
+26000 key enter
+28000 key enter
+30000 key enter
+32000 key enter
+34000 key a            # the name
+34200 key v
+34400 key a
+34600 key t
+34800 key a
+35000 key r
+36000 key enter
+38000 key enter        # Yes
+44000 cheat give 0x138 1 40 spell 1
+45000 cheat give 0x138 1 40 spell 42
+47000 down ctrl        # save: Ctrl+S, slot I, "armour"
+47100 key s
+47300 up ctrl
+49000 key enter
+50500 key a
+50700 key r
+50900 key m
+51100 key o
+51300 key u
+51500 key r
+52000 key enter
