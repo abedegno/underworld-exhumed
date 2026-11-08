@@ -61,7 +61,7 @@ One switch for each enhancement the game has, all off by default. The selected o
 
 ### Fixes
 
-One switch for each fix the game has, all off by default: changes that correct a fault of the original game, each marked "changes play". They are kept with the enhancements, in the same `enhance=` list, and turned on in the same way. What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md#fixes). UW1 has three (`tidy-objects`, `restore-at-rest` and `plain-debris`), UW2 two (`restore-at-rest` and `plain-debris`).
+One switch for each fix the game has, all off by default: changes that correct a fault of the original game, each marked "changes play". They are kept with the enhancements, in the same `enhance=` list, and turned on in the same way. What each does is in [ENHANCEMENTS.md](ENHANCEMENTS.md#fixes). UW1 has four (`tidy-objects`, `restore-at-rest`, `plain-debris` and `armour-spells`), UW2 four (`restore-at-rest`, `plain-debris`, `armour-spells` and `true-enchants`). `true-enchants` alone changes only what the game shows, though it is marked "changes play" as every fix is.
 
 ![The Fixes tab](img/settings-fixes.png)
 

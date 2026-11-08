@@ -149,7 +149,7 @@ Each entry was re-read against the source before it was written here. The sectio
 - **Evidence:** code reading and the shipped `STRINGS.PAK` (block 6); not measured in play.
 - **Confidence:** certain that the names and the effects disagree; whether the code or the strings were meant to change is not known.
 - **Effect:** players who choose a weapon by its enchantment's name get the other bonus. Players have long reported the two as swapped, though usually for UW1, where they are not.
-- **For a port:** matching DOS keeps both; a fix belongs in the strings, so that the game's arithmetic is unchanged.
+- **For a port:** matching DOS keeps both; a fix belongs in the strings, so that the game's arithmetic is unchanged. The optional fix `true-enchants` does that, in `do_of`: it names each melee weapon enchantment for what it does ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md)).
 
 ### Item toughness on an item in a high slot goes to one location twice
 
@@ -159,6 +159,15 @@ Each entry was re-read against the source before it was written here. The sectio
 - **Confidence:** likely (the neighbouring line indexes by `i`).
 - **Effect:** such an item protects one hit location twice over and leaves the other bare. Which items carry such enchantments was not checked.
 - **For a port:** matching DOS means the doubled location.
+
+### The armour spells add no armour
+
+- **What happens:** `player_affected_by` keeps the best armour level of the active spells and worn enchantments of class 2 in bits 4 to 7 of the `bonuses` word (Resist Blows 2, Thick Skin 3, Iron Flesh 5). `parse_spells` was meant to add it to the player's armour at all four hit locations, but its first loop, over the stealth bits 0 to 3, shifts `bonuses` right once a pass (`bonuses = bonuses >> 1` in the loop's increment), so when the second loop adds `(bonuses >> 4) & 0xF` it reads the original bits 8 to 11, which nothing sets. The armour spells cost their mana and take one of the three active spell places, show their icon, and add nothing.
+- **Where:** `player_affected_by` and `parse_spells` in [game/PLAYDATA.C](../src/game/PLAYDATA.C).
+- **Evidence:** code reading; both games. UW2.EXE has the same: in ovr142's `parse_spells` SI holds `bonuses`, the first loop ends `mov ax,si; shr ax,1; mov si,ax` (file offset 97385h) and the second reads `mov ax,si; shr ax,4; and al,0Fh` (97397h), with nothing reloading SI between them. Seen in the port, which plays as DOS: the `armour-spells` session's recording, replayed without the fix, casts Resist Blows and Iron Flesh from scrolls and the armour probe reports armour 0 at every hit location throughout (`tools/armourcheck.py`). UW1 is the same ([UW1's FINDINGS](../../uw1/docs/FINDINGS.md#the-armour-spells-add-no-armour)).
+- **Confidence:** confirmed.
+- **Effect:** Resist Blows, Thick Skin and Iron Flesh, and any worn item with a class 2 enchantment, do not reduce the damage of blows that land. Every other armour (worn armour, shields, and toughness enchantments, apart from the fault above for an item in a high slot) and the Protection spell (class 3, which makes blows miss more often) work.
+- **For a port:** matching DOS keeps it; the optional fix `armour-spells` adds the level to every hit location ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md#fixes)).
 
 ### Mending's light-source exclusion compares the wrong field
 

@@ -1,0 +1,20 @@
+# true-enchants: from the menu, load the saved game setup/true-enchants writes (two longswords in
+# the pack, enchanted with effect 2, which adds damage, and effect 6, which adds to hit, and two
+# scrolls of Name Enchantment); read a scroll (left button) and name the first sword with it
+# (right button), then the other scroll on the second sword. Name Enchantment always identifies,
+# with no lore roll. With the flag the first is "a longsword of Great Damage" and the second "of
+# Great Accuracy", as they work; the original names them the other way round
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+8000 move 284 92       # the first scroll, read
+8300 mdown 284 92 left
+8600 mup 284 92 left
+10000 move 247 92      # on the first longsword (effect 2)
+10300 mdown 247 92 right
+10600 mup 247 92 right
+12500 move 303 92      # the second scroll, read
+12800 mdown 303 92 left
+13100 mup 303 92 left
+14500 move 265 92      # on the second longsword (effect 6)
+14800 mdown 265 92 right
+15100 mup 265 92 right
