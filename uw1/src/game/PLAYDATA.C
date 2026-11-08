@@ -31,6 +31,9 @@
 #include <io.h>
 #include <mem.h>
 #include <stdlib.h>
+#ifndef __TURBOC__
+#include <stdio.h>                      /* the armour probe (parse_spells) */
+#endif
 #include "combat.h"
 #include "critter.h"
 #include "file.h"
@@ -211,8 +214,8 @@ void far set_drugged(char on)
    slot >= 0) to the player:
      class 0   light: the brightest level wins (light high nibble);
      class 1   motion: sets bit minor - 1 of motionbits;
-     class 2   armour: the best level is kept in bits 4 to 7 of *bonuses, added to every
-               hit location by parse_spells;
+     class 2   armour: the best level is kept in bits 4 to 7 of *bonuses, meant to be
+               added to every hit location by parse_spells (which loses it);
      class 3   minor 1 adds 3 to cmbModTH at every hit location; minors 2 to 4 set
                stealth bits in *bonuses (parse_spells); minors 5 to 9 add resistances;
      class 9   backfire;
@@ -331,12 +334,22 @@ void far set_maze(char on)
 }
 
 /* Applies the bits player_affected_by gathered: bit 1 cuts noise by 16, bit 2
-   visibility by 5, bit 3 visibility by 16 (none below 0); the high nibble is added to
-   all four armour values. Then the maze spell, and redraws the active spell icons. */
+   visibility by 5, bit 3 visibility by 16 (none below 0); the high nibble was meant to be
+   added to all four armour values, but the first loop has shifted bonuses right four
+   times by then, so the second reads the original bits 8 to 11, which nothing sets: the
+   armour spells (Resist Blows, Thick Skin, Iron Flesh) and class 2 enchantments add
+   nothing (UW.EXE the same, ovr133). Then the maze spell, and redraws the active spell
+   icons. */
 void far parse_spells(uint16 bonuses)
 {
     unsigned char i;
     unsigned char spells[3];
+#ifndef __TURBOC__
+    /* port only: --enhance armour-spells (docs/ENHANCEMENTS.md), the armour level as
+       player_affected_by left it, before the loop below shifts it away */
+    unsigned char spell_armour = (unsigned char)((bonuses >> 4) & 0xF);
+    static int armour_probe = -1;       /* UW1PORT_ARMOUR_PROBE, read once */
+#endif
     for (i = 0; i < 4; i++, bonuses = bonuses >> 1) {
         if (bonuses & 1) {
             switch (i) {
@@ -354,6 +367,19 @@ void far parse_spells(uint16 bonuses)
     }
     for (i = 0; i < 4; i++)
         playerdat->armour[i] = playerdat->armour[i] + ((bonuses >> 4) & 0xF);
+#ifndef __TURBOC__
+    /* port only: with the fix the armour level is added to every hit location, as the
+       loop above was meant to; FixPlayerEquips has worked the armour out afresh, so it is
+       added once. UW1PORT_ARMOUR_PROBE (a test, tools/armourcheck.py)
+       reports the four values and the level on stderr after each recomputation */
+    if (ENHANCED(ENH_ARMOUR_SPELLS))
+        for (i = 0; i < 4; i++)
+            playerdat->armour[i] = playerdat->armour[i] + spell_armour;
+    if (armour_probe < 0) armour_probe = getenv("UW1PORT_ARMOUR_PROBE") != NULL;
+    if (armour_probe)
+        fprintf(stderr, "armour-probe: armour %u %u %u %u spell %u\n", playerdat->armour[0],
+                playerdat->armour[1], playerdat->armour[2], playerdat->armour[3], spell_armour);
+#endif
     set_maze(MazeSpell);
     parse_aspells(spells);
     active_spells(spells);
