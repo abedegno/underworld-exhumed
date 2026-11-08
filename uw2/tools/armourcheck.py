@@ -86,6 +86,7 @@ def main():
         check(f'the session carries {FIX}, and a copy without it can be made', off is not None and FIX.encode() not in off[:64])
         if bad: return 1
         offrec = os.path.join(work, 'off.rec'); open(offrec, 'wb').write(off)
+        shutil.copy(os.path.splitext(SESSION)[0] + '.cfg', os.path.splitext(offrec)[0] + '.cfg')  # its settings, which replay reads from beside it
         runs = {}
         for tag, rec in (('with the fix', SESSION), ('without it', offrec)):
             out = os.path.join(work, tag.replace(' ', '-'))

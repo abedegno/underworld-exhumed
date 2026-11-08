@@ -130,7 +130,7 @@ Each entry was re-read against the source before it was written here, and each "
 - **Where:** `player_affected_by` and `parse_spells` in [game/PLAYDATA.C](../src/game/PLAYDATA.C).
 - **Evidence:** code reading; both games. UW.EXE has the same: in ovr133's `parse_spells` SI holds `bonuses`, the first loop ends `mov ax,si; shr ax,1; mov si,ax` (file offset 7E38Dh) and the second reads `mov ax,si; shr ax,4; and al,0Fh` (7E39Fh), with nothing reloading SI between them. Seen in the port, which plays as DOS: the `armour-spells` session's recording, replayed without the fix, casts Resist Blows and Iron Flesh from scrolls and the armour probe reports armour 0 at every hit location throughout (`tools/armourcheck.py`). UW2 is the same ([UW2's FINDINGS](../../uw2/docs/FINDINGS.md#the-armour-spells-add-no-armour)).
 - **Confidence:** confirmed.
-- **Effect:** Resist Blows, Thick Skin and Iron Flesh, and any worn item with a class 2 enchantment, do not reduce the damage of blows that land. Every other armour (worn armour, shields, toughness enchantments) and the Protection spell (class 3, which makes blows miss more often) work.
+- **Effect:** Resist Blows, Thick Skin and Iron Flesh, and any worn item with a class 2 enchantment, do not reduce the damage of blows that land. Every other armour (worn armour, shields, and toughness enchantments, apart from the fault above for an item in a high slot) and the Protection spell (class 3, which makes blows miss more often) work.
 - **For a port:** matching DOS keeps it; the optional fix `armour-spells` adds the level to every hit location ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md#fixes)).
 
 ### The dragons' idle tail swish asks for a flask redraw instead
