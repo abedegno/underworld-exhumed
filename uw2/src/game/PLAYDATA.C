@@ -305,6 +305,7 @@ void far parse_spells(uint16 bonuses)
     /* port only: --enhance armour-spells (docs/ENHANCEMENTS.md), the armour level as
        player_affected_by left it, before the loop below shifts it away */
     unsigned char spell_armour = (unsigned char)((bonuses >> 4) & 0xF);
+    static int armour_probe = -1;       /* UW2PORT_ARMOUR_PROBE, read once */
 #endif
     for (i = 0; i < 4; i++, bonuses = bonuses >> 1) {
         if (bonuses & 1) {
@@ -331,7 +332,8 @@ void far parse_spells(uint16 bonuses)
     if (ENHANCED(ENH_ARMOUR_SPELLS))
         for (i = 0; i < 4; i++)
             playerdat->armour[i] = playerdat->armour[i] + spell_armour;
-    if (getenv("UW2PORT_ARMOUR_PROBE"))
+    if (armour_probe < 0) armour_probe = getenv("UW2PORT_ARMOUR_PROBE") != NULL;
+    if (armour_probe)
         fprintf(stderr, "armour-probe: armour %u %u %u %u spell %u\n", playerdat->armour[0],
                 playerdat->armour[1], playerdat->armour[2], playerdat->armour[3], spell_armour);
 #endif

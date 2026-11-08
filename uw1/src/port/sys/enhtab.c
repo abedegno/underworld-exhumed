@@ -28,5 +28,5 @@ const struct enhance_flag enhance_table[ENH_COUNT] = {
     { "plain-debris", "An enchanted object that breaks loses its spell, so its debris casts nothing", ENH_FIX, NULL, NULL },
     /* game/PLAYDATA.C's parse_spells shifts the armour spells' level away before it adds it,
        so Resist Blows, Thick Skin and Iron Flesh add no armour; this adds it */
-    { "armour-spells", "Resist Blows, Thick Skin and Iron Flesh add to your armour, as they were meant to", ENH_FIX, NULL, NULL },
+    { "armour-spells", "Resist Blows, Thick Skin and Iron Flesh, cast or worn, add to your armour, as they were meant to", ENH_FIX, NULL, NULL },
 };

@@ -35,18 +35,22 @@ FIX = 'armour-spells'
 LEVELS = [0, 2, 5]                      # none, Resist Blows, Iron Flesh
 
 
+def names_of(data):
+    """The names in a recording's enhancements chunk, or None if it has none. In formats 5 and 6
+    the chunk follows the 12-byte header: stream 9, a 16-bit length, the names separated by
+    commas (as replay.py's dos_can_replay reads it)."""
+    if len(data) < 15 or data[4] not in (5, 6) or data[12] != 9: return None
+    n = struct.unpack_from('<H', data, 13)[0]
+    return data[15:15 + n].decode('ascii').split(',')
+
+
 def without_fix(data):
-    """The recording with its enhancements chunk (id 9, a 16-bit length, the names separated by
-    commas) naming skip-intro alone."""
-    i = data.find(FIX.encode())
-    j = data.rfind(b'\x09', 0, i)
-    while j >= 0:
-        n = struct.unpack_from('<H', data, j + 1)[0]
-        if j + 3 <= i < j + 3 + n: break
-        j = data.rfind(b'\x09', 0, j)
-    if j < 0: return None
-    names = ','.join(x for x in data[j + 3:j + 3 + n].decode().split(',') if x != FIX).encode()
-    return data[:j] + b'\x09' + struct.pack('<H', len(names)) + names + data[j + 3 + n:]
+    """The recording with FIX taken out of its enhancements chunk, or None if it has none."""
+    names = names_of(data)
+    if names is None or FIX not in names: return None
+    n = struct.unpack_from('<H', data, 13)[0]
+    kept = ','.join(x for x in names if x != FIX).encode()
+    return data[:12] + b'\x09' + struct.pack('<H', len(kept)) + kept + data[15 + n:]
 
 
 def probed(log):
@@ -59,8 +63,9 @@ def probed(log):
 
 
 def main():
-    bad = []
+    bad, done = [], []
     def check(what, ok, detail=''):
+        done.append(what)
         print(('ok    ' if ok else 'FAIL  ') + what + ('' if ok or not detail else f'\n      {detail}'))
         if not ok: bad.append(what)
     work = tempfile.mkdtemp(prefix='armourcheck-')
@@ -74,7 +79,7 @@ def main():
         shutil.copytree(save, os.path.join(stage, 'SAVE1'))
         data = open(SESSION, 'rb').read()
         off = without_fix(data)
-        check(f'the session carries {FIX}, and a copy without it can be made', off is not None and FIX.encode() not in off[:64])
+        check(f'the session carries {FIX}, and a copy without it can be made', off is not None and FIX not in names_of(off))
         if bad: return 1
         offrec = os.path.join(work, 'off.rec'); open(offrec, 'wb').write(off)
         shutil.copy(os.path.splitext(SESSION)[0] + '.cfg', os.path.splitext(offrec)[0] + '.cfg')  # its settings, which replay reads from beside it
@@ -96,8 +101,7 @@ def main():
         check('the probe reports nothing when off', rc == 0 and 'armour-probe' not in log)
     finally:
         shutil.rmtree(work, ignore_errors=True)
-    n = 9
-    print(f'armourcheck: {n - len(bad)} of {n} checks pass')
+    print(f'armourcheck: {len(done) - len(bad)} of {len(done)} checks pass')
     return 1 if bad else 0
 
 
