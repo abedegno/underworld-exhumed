@@ -1,8 +1,10 @@
 """The test tiers (docs/BUILDING.md, "Testing"): `make test` and `make test-full`.
 
     python3 tools/test.py fast     make test: the gate (make check), the port build, the routine
-                                   fuzzing's quick run, and every session replayed in the port
-                                   against its golden; what the pre-push hook runs
+                                   fuzzing's quick run, every session replayed in the port
+                                   against its golden, and the checks of the enhancements, the
+                                   settings screen, movement, the black box and the fix
+                                   armour-spells (tools/armourcheck.py); what the pre-push hook runs
     python3 tools/test.py full     make test-full: the gate, both port builds, the goldens made
                                    again from DOS (each session twice, checked identical), every
                                    session against them in the port and in the UBSan build, the
@@ -93,7 +95,8 @@ def main(argv):
                   ('enhancements', enhcheck, 'port build'),
                   ('settings screen', setcheck, 'port build'),
                   ('player movement', movecheck, 'port build'),
-                  ('the black box', blackboxcheck, 'port build')]
+                  ('the black box', blackboxcheck, 'port build'),
+                  ('armour spells', tool('armourcheck.py'), 'port build')]
     else:
         steps += [('port-debug build', tool('portbuild.py', '--debug'), None),
                   ('goldens from DOS, twice each', tool('replay.py', 'golden', 'all'), None),
@@ -105,6 +108,7 @@ def main(argv):
                   ('settings screen', setcheck, 'port build'),
                   ('player movement', movecheck, 'port build'),
                   ('the black box', blackboxcheck, 'port build'),
+                  ('armour spells', tool('armourcheck.py'), 'port build'),
                   ('coverage report', tool('coverage.py'), 'port build')]
     results = []; failed = set(); t0 = time.time()
     for name, cmd, needs in steps:

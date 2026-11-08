@@ -124,6 +124,15 @@ Each entry was re-read against the source before it was written here, and each "
 - **Effect:** such an item protects one hit location twice over and leaves the other bare. Which items carry such enchantments was not checked.
 - **For a port:** matching DOS means the doubled location.
 
+### The armour spells add no armour
+
+- **What happens:** `player_affected_by` keeps the best armour level of the active spells and worn enchantments of class 2 in bits 4 to 7 of the `bonuses` word (Resist Blows 2, Thick Skin 3, Iron Flesh 5). `parse_spells` was meant to add it to the player's armour at all four hit locations, but its first loop, over the stealth bits 0 to 3, shifts `bonuses` right once a pass (`bonuses = bonuses >> 1` in the loop's increment), so when the second loop adds `(bonuses >> 4) & 0xF` it reads the original bits 8 to 11, which nothing sets. The armour spells cost their mana and take one of the three active spell places, show their icon, and add nothing.
+- **Where:** `player_affected_by` and `parse_spells` in [game/PLAYDATA.C](../src/game/PLAYDATA.C).
+- **Evidence:** code reading; both games. UW.EXE has the same: in ovr133's `parse_spells` SI holds `bonuses`, the first loop ends `mov ax,si; shr ax,1; mov si,ax` (file offset 7E38Dh) and the second reads `mov ax,si; shr ax,4; and al,0Fh` (7E39Fh), with nothing reloading SI between them. Seen in the port, which plays as DOS: the `armour-spells` session's recording, replayed without the fix, casts Resist Blows and Iron Flesh from scrolls and the armour probe reports armour 0 at every hit location throughout (`tools/armourcheck.py`). UW2 is the same ([UW2's FINDINGS](../../uw2/docs/FINDINGS.md#the-armour-spells-add-no-armour)).
+- **Confidence:** confirmed.
+- **Effect:** Resist Blows, Thick Skin and Iron Flesh, and any worn item with a class 2 enchantment, do not reduce the damage of blows that land. Every other armour (worn armour, shields, toughness enchantments) and the Protection spell (class 3, which makes blows miss more often) work.
+- **For a port:** matching DOS keeps it; the optional fix `armour-spells` adds the level to every hit location ([ENHANCEMENTS.md](../../docs/ENHANCEMENTS.md#fixes)).
+
 ### The dragons' idle tail swish asks for a flask redraw instead
 
 - **What happens:** every 64 ticks `update_screen` may start a flask bubbling and a dragon's tail swishing. For the bubbles it sets the flask's bit, `1 << (r & 1)`. For the tail it sets `swishing[r & 1]` and then `slow_adjust |= 1 << (r + 4 & 1)`. In C `+` binds tighter than `&`, so the shift is `(r + 4) & 1`, again 0 or 1: the bit of a flask (elements 0 and 1), not of a dragon (4 and 5).

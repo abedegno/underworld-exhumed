@@ -1,0 +1,16 @@
+# armour-spells: from the menu, load the saved game setup/armour-spells writes (a new character,
+# wearing no armour, with a scroll of Resist Blows in the pack's first slot and one of Iron Flesh
+# in its second); use the first (the left button), which casts Resist Blows (armour level 2), and
+# eleven seconds later the second, which casts Iron Flesh (level 5). With the fix the player's
+# armour at every hit location is 2 after the first and 5 after the second (the best level, not
+# the sum); without it (the original: the same recording with its enhancements chunk naming
+# skip-intro alone) it stays 0. tools/armourcheck.py reads the values from the armour probe
+3000 key enter         # Journey Onward
+4500 key enter         # the first saved game
+9000 move 245 93       # the scroll of Resist Blows, used
+9300 mdown 245 93 left
+9500 mup 245 93 left
+20000 move 265 93      # the scroll of Iron Flesh, used
+20100 mdown 265 93 left
+20300 mup 265 93 left
+24000 move 160 100
