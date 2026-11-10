@@ -19,7 +19,7 @@
   }
  },
  "replay_build": {
-  "exe_sha256": "ff0bbc7d3bed92232340298fe409c90b8c7e244a3256ed5a4096f6569d6cfef2"
+  "exe_sha256": "8b17d9df1c96ef9d8c74fc17fe27b1ca0d95eb12ec61a1a082bebece24767a8a"
  },
  "dos": {
   "backend": "dosbox-x",
