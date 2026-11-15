@@ -10,6 +10,7 @@ For players. Each release's notes are drafted from here. Releases are tagged `uw
 - **New:** the fix plain-debris (`--enhance plain-debris`, or the settings screen's Fixes tab). An enchanted object that breaks loses its spell. Before, the debris it left kept the spell, so an enchanted scroll thrown at a wall until it broke gave debris that cast the spell every time it was used, for ever.
 - **New:** the fix armour-spells (`--enhance armour-spells`, or the settings screen's Fixes tab). Resist Blows, Thick Skin and Iron Flesh now add to your armour, as they were meant to. In the original they cost their mana and show their icon but add nothing: the game keeps the spell's level and then loses it before adding it to your armour. With the fix the best of them active adds 2, 3 or 5 to your armour everywhere on your body, so blows that land do less damage.
 - **New:** optional enhancement key-ring (`--enhance key-ring`). Using a key on a lock it does not fit tries the other keys you carry, bags included, and locks or unlocks the lock with the one that fits ("Another key unlocks the lock."), or says "No key fits."
+- **Fixed:** on the web page, a browser on a display scaled to 110% or 121% (Windows set to 110%, say) played the game's sound but showed no picture, and at 125% the picture stayed at one size instead of filling the page. The page now shows the game at any scale.
 
 ## 1.0.2 (14 October 2026)
 
