@@ -161,7 +161,7 @@ A new deploy key for the site: the same, with `deploy.pub` added to `abedegno/un
 
 ## Releases
 
-A tag names the game and the version: `uw2-v1.2.1`, `uw1-v1.0.0-rc2`. `release.yml` builds that game's packages from the sources alone (no game data, no Borland toolchain) and attaches them to a draft release titled with the game. The owner checks the draft and publishes it by hand. UW2's releases before the merge are tagged `v1.2.0` and `v1.2.0-rc1` to `rc9`, and keep those tags.
+A tag names the game and the version: `uw2-v1.2.1`, `uw1-v1.0.0-rc2`. `release.yml` builds that game's packages from the sources alone (no game data, no Borland toolchain) and attaches them to a draft release titled with the game. The owner checks the draft and publishes it by hand. Publishing a final is also the time to update the Releases row of the [README's Status table](../README.md#status) to it. UW2's releases before the merge are tagged `v1.2.0` and `v1.2.0-rc1` to `rc9`, and keep those tags.
 
 | Package | Built on | What is in it |
 | --- | --- | --- |
